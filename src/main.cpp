@@ -1,32 +1,79 @@
-#include <iostream>
-#include "vector.hpp"
+#include <cstdlib>      // srand()
+#include <ctime>        // for srand
+#include <iostream>     // std:cerr etc.
+#include <unistd.h>     // getopt()
 
-int main() {
-    std::cout << "Hello K23A" << std::endl;
+#include "directed_graph.hpp"
 
-    int num_vectors;
+int vector_dimension;
 
-    auto* float_vectors = MathVector<float>::init_from_file("siftsmall/siftsmall_base.fvecs", num_vectors, 10000);
-    std::cout << "Read " << num_vectors << " float vectors." << std::endl;
+void parse_parameters(int argc, char *argv[], int &k, float &a) {
+    int opt;
+    // Make sure user gives all parameters
+    if (argc != 7) {
+        std::cerr << "Usage: " << argv[0] << " -k <k neighbours> -d <vector dimension> -a <Vamana a>" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    
+    // Parse parameters
+    while ((opt = getopt(argc, argv, "k:d:a:")) != -1) {
+        switch (opt) {
+        case 'k':
+            k = atoi(optarg);
+            if (k <= 0) {
+                std::cerr << "k must be positive" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
+        case 'd':
+            vector_dimension = atoi(optarg);
+            if (vector_dimension <= 0) {
+                std::cerr << "Vector dimension must be positive" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
+        case 'a':
+            a = atof(optarg);
+            if (a <= 1.0) {
+                std::cerr << "Vamana a must be greater than 1" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
+        default:
+            std::cerr << "Usage: " << argv[0] << " -k <k neighbours> -d <vector dimension> -a <Vamana a>" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+}
 
-    if (num_vectors > 0) {
-        std::cout << *(*float_vectors)[0] << std::endl;
+int main(int argc, char *argv[]) {
+    srand(time(NULL));
+
+    int k;
+    float a;
+    parse_parameters(argc, argv, k, a);
+
+    // After reading fvecs/bvecs
+    int total_vectors = 10;
+    if (k >= total_vectors) {
+        std::cerr << "k must be smaller than the total amount of vectors" << std::endl;
+        exit(EXIT_FAILURE);
     }
 
-    auto* uchar_vectors = MathVector<unsigned char>::init_from_file("bigann/queries.bvecs", num_vectors, 10000);
-    std::cout << "Read " << num_vectors << " unsigned char vectors." << std::endl;
+    std::cout << "Parameters are:" << std::endl;
+    std::cout << "k = " << k << std::endl;
+    std::cout << "Vector dimension = " << vector_dimension << std::endl;
+    std::cout << "Vamana a = " << a << std::endl;
+    std::cout << "Total vectors = " << total_vectors << std::endl << std::endl;
+    
+    DirectedGraph g1(total_vectors);
+    g1.insert(0, 1);
+    g1.insert(0, 2);
+    g1.insert(1, 2);
+    g1.insert(1, total_vectors-1);
 
-    if (num_vectors > 235) {
-        std::cout << *(*uchar_vectors)[235] << std::endl;
-    }
-
-    auto* solutions = MathVector<float>::query_solutions("siftsmall/siftsmall_groundtruth.ivecs", 0);
-
-    destroy_vector(float_vectors);
-
-    destroy_vector(uchar_vectors);
-
-    delete solutions;
+    DirectedGraph g2(total_vectors);
+    g2.random(5);
 
     return 0;
 }
