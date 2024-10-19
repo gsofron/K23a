@@ -2,4 +2,4 @@
 
 # Add all tests here
 
-./sample_test
+./directed_graph_test

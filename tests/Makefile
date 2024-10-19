@@ -6,9 +6,9 @@ TEST_DIR := .
 CXX = g++
 CXXFLAGS = -g -Wall -Wextra $(addprefix -I,$(INC_DIRS))
 
-all: ../sample_test
+all: ../directed_graph_test
 
-../sample_test: $(BUILD_DIR)/sample_test.o
+../directed_graph_test: $(BUILD_DIR)/directed_graph_test.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(BUILD_DIR)/%.o: $(TEST_DIR)/%.cpp

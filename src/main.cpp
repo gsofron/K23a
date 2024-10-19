@@ -1,9 +1,10 @@
 #include <cstdlib>      // srand()
-#include <ctime>        // for srand
+#include <ctime>        // time(NULL) for srand
 #include <iostream>     // std:cerr etc.
 #include <unistd.h>     // getopt()
 
 #include "directed_graph.hpp"
+#include "vector.hpp"
 
 int vector_dimension;
 
@@ -65,15 +66,25 @@ int main(int argc, char *argv[]) {
     std::cout << "Vector dimension = " << vector_dimension << std::endl;
     std::cout << "Vamana a = " << a << std::endl;
     std::cout << "Total vectors = " << total_vectors << std::endl << std::endl;
-    
-    DirectedGraph g1(total_vectors);
-    g1.insert(0, 1);
-    g1.insert(0, 2);
-    g1.insert(1, 2);
-    g1.insert(1, total_vectors-1);
 
-    DirectedGraph g2(total_vectors);
-    g2.random(5);
+    // Create 'total_vectors' random MathVectors (create this here to deallocate it later)
+    std::cout << "-----Creating " << total_vectors << " random vectors-----" << std::endl;
+    std::vector<MathVector <int> *> vectors;
+    for (int i = 0 ; i < total_vectors ; i++) {
+        MathVector<int> *random_vector = DirectedGraph<int>::random_vector(vector_dimension);
+        vectors.push_back(random_vector);
+        std::cout << *vectors[i] << std::endl;
+    }
+    std::cout << std::endl;
 
+    // Create a random graph
+    DirectedGraph<int> *g = DirectedGraph<int>::random_graph(vectors, 5);
+    std::cout << "-----Creating a random graph where each vertex has 5 neighbors-----" << std::endl << *g << std::endl;
+    delete g;
+
+    // Deallocate memory
+    for (int i = 0 ; i < total_vectors ; i++) {
+        delete vectors[i];
+    }
     return 0;
 }
