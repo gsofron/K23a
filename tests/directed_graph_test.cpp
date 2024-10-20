@@ -1,4 +1,4 @@
-#include "../include/acutest/acutest.h"
+#include "acutest.h"
 #include "directed_graph.hpp"
 
 void test_directed_graph_insert(void) {
@@ -45,7 +45,40 @@ void test_directed_graph_insert(void) {
     delete g;
 }
 
+void test_directed_graph_remove(void) {
+    // Create several random math-vectors and push them into a dynamic array (vector)
+    int num_of_vecs = 100;
+    int vector_dimension = 3;
+    std::vector<MathVector<int> *> vecs;
+    for (int i = 0; i < num_of_vecs; i++) {
+        vecs.push_back(DirectedGraph<int>::random_vector(vector_dimension));
+    }
+
+    // Initialize a directed graph with 3D vectors of ints
+    // Insert them in pais as follows: 0->1, 2->3, 4->5, ...
+    DirectedGraph<int> *g = new DirectedGraph<int>(vector_dimension);
+    for (int i = 0; i < num_of_vecs; i += 2) {
+        g->insert(vecs[i], vecs[i+1]);
+    }
+
+    // Try to remove non-existent edges that were never inserted
+    TEST_CHECK(!g->remove(vecs[0], vecs[4]));
+    TEST_CHECK(!g->remove(vecs[1], vecs[0]));
+
+    // Remove every edge an test
+    for (int i = 0; i < num_of_vecs; i += 2) {
+        TEST_CHECK(g->remove(vecs[i], vecs[i+1]));
+        TEST_CHECK(!g->remove(vecs[i], vecs[i+1])); // Try to remove non-existent edges that were previously inserted
+    }
+
+    for (int i = 0; i < num_of_vecs; i++) {
+        delete vecs[i];
+    }
+    delete g;
+}
+
 TEST_LIST = {
     { "test_directed_graph_insert", test_directed_graph_insert },
+    { "test_directed_graph_remove", test_directed_graph_remove },
     { NULL, NULL } // Terminate test list with NULL
 };

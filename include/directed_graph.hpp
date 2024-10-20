@@ -22,7 +22,7 @@ public:
     void insert(MathVector<T> *source, MathVector<T> *destination);
 
     // Remove edge ('source', 'destination') from graph if present
-    void remove(MathVector<T> *source, MathVector<T> *destination);
+    bool remove(MathVector<T> *source, MathVector<T> *destination);
 
     // Overload '<<' operator to print the graph with ease
     friend std::ostream& operator<<(std::ostream& os, const DirectedGraph<T>& dg) {
@@ -41,7 +41,7 @@ public:
     static DirectedGraph<T> *random_graph(std::vector<MathVector <int> *> vectors, int n);
 
     // Accessor used for testing
-    std::unordered_map<MathVector<T> *, std::unordered_set<MathVector<T> *>> get_umap() { return neighbors; }
+    const std::unordered_map<MathVector<T> *, std::unordered_set<MathVector<T> *>>& get_umap() const { return neighbors; }
 private:
     int dimension;      // The dimension of all MathVectors
     std::unordered_map<MathVector<T> *, std::unordered_set<MathVector<T> *>> neighbors; // Unordered map representing the adjacency list
@@ -64,11 +64,10 @@ void DirectedGraph<T>::insert(MathVector<T> *source, MathVector<T> *destination)
 }
 
 template <typename T>
-void DirectedGraph<T>::remove(MathVector<T> *source, MathVector<T> *destination) {
+bool DirectedGraph<T>::remove(MathVector<T> *source, MathVector<T> *destination) {
     ERROR_EXIT(*source == *destination, "Source and destination vertices cannot be the same")
     // Remove the edge, if present
-    auto& neighbors_uset = neighbors[source];
-    neighbors_uset.erase(destination);
+    return neighbors[source].erase(destination) > 0;
 }
 
 // Creates a random vector with the given dimension
