@@ -11,7 +11,7 @@
 void test_vectors_init_by_file(void) {
     int num_vectors;
 
-    auto* vectors = MathVector<float>::init_from_file("siftsmall/siftsmall_base.fvecs", num_vectors, N);
+    auto *vectors = MathVector<float>::init_from_file("siftsmall/siftsmall_base.fvecs", num_vectors, N);
     
     int vector_dimension = (*vectors)[0]->dimension();
 
@@ -45,7 +45,7 @@ void test_vectors_euclidean_distance(void) {
     int num_vectors;
     const float EPSILON = 0.001f;
 
-    auto* vectors = MathVector<float>::init_from_file("siftsmall/siftsmall_base.fvecs", num_vectors, N);
+    auto *vectors = MathVector<float>::init_from_file("siftsmall/siftsmall_base.fvecs", num_vectors, N);
     
     float distance = vectors->at(0)->euclidean_distance(*(vectors->at(1)));
 

@@ -15,7 +15,7 @@ private:
 
 public:
     MathVector(int dimension) : items(dimension) {}
-    MathVector(int dimension, const T* values) : items(values, values + dimension) {}
+    MathVector(int dimension, const T *values) : items(values, values + dimension) {}
 
     size_t dimension() const { return items.size(); }
     bool operator==(const MathVector<T>& other) const { return items == other.items; }
@@ -32,10 +32,8 @@ public:
         return os;
     }
 
-    static std::vector<MathVector<T>*>* init_from_file(const std::string& file_name, int& num_read_vectors, int max_vectors);
-    static std::vector<int>* query_solutions(const std::string& file_name, int query_index);
-
-
+    static std::vector<MathVector<T>*> *init_from_file(const std::string& file_name, int& num_read_vectors, int max_vectors);
+    static std::vector<int> *query_solutions(const std::string& file_name, int query_index);
 };
 
 template <typename T>
@@ -53,9 +51,9 @@ float MathVector<T>::euclidean_distance(const MathVector<T>& other) const {
 }
 
 template <typename T>
-void destroy_vector(std::vector<MathVector<T>*>* vec) {
+void destroy_vector(std::vector<MathVector<T>*> *vec) {
     if (vec) {
-        for (auto* v : *vec) {
+        for (auto *v : *vec) {
             delete v;
         }
         delete vec;
@@ -63,7 +61,7 @@ void destroy_vector(std::vector<MathVector<T>*>* vec) {
 }
 
 template <typename T>
-std::vector<MathVector<T>*>* MathVector<T>::init_from_file(
+std::vector<MathVector<T>*> *MathVector<T>::init_from_file(
     const std::string& file_name, int& num_read_vectors, int max_vectors) {
 
     std::ifstream file(file_name, std::ios::binary);
@@ -71,7 +69,7 @@ std::vector<MathVector<T>*>* MathVector<T>::init_from_file(
         throw std::runtime_error("Error opening file: " + file_name);
     }
 
-    auto* vectors = new std::vector<MathVector<T>*>();
+    auto *vectors = new std::vector<MathVector<T>*>();
     num_read_vectors = 0;
 
     while (!file.eof() && num_read_vectors < max_vectors) {
@@ -80,7 +78,7 @@ std::vector<MathVector<T>*>* MathVector<T>::init_from_file(
             break;
         }
 
-        MathVector<T>* vector = new MathVector<T>(dimension);
+        MathVector<T> *vector = new MathVector<T>(dimension);
 
         if (!file.read(reinterpret_cast<char*>(&vector->items[0]), dimension * sizeof(T))) {
             delete vector;  
@@ -96,7 +94,7 @@ std::vector<MathVector<T>*>* MathVector<T>::init_from_file(
 }
 
 template <typename T>
-std::vector<int>* MathVector<T>::query_solutions(const std::string& file_name, int query_index) {
+std::vector<int> *MathVector<T>::query_solutions(const std::string& file_name, int query_index) {
     std::ifstream file(file_name, std::ios::binary);
     if (!file) {
         throw std::runtime_error("Error opening file: " + file_name);
