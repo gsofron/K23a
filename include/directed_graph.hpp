@@ -57,9 +57,7 @@ void DirectedGraph<T>::insert(MathVector<T> *source, MathVector<T> *destination)
     // Vertex cannot point to itself
     ERROR_EXIT(*source == *destination, "Vertex cannot point to itself");
 
-    // We don't allow duplicate edges
-    ERROR_EXIT(std::find(neighbors[source].begin(), neighbors[source].end(), destination) != neighbors[source].end(), "Edge already exists");
-
+    // Insert edge. Insertion won't take place if the edge already exists
     neighbors[source].insert(destination);
 }
 

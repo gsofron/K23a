@@ -1,19 +1,21 @@
 #include "acutest.h"
 #include "directed_graph.hpp"
 
+#define NUM_OF_VECS 1000
+#define VECTOR_DIMENSION 5
+
 void test_directed_graph_insert(void) {
-    int vector_dimension = 3;
-    DirectedGraph<int> *g = new DirectedGraph<int>(vector_dimension);
+    DirectedGraph<int> *g = new DirectedGraph<int>(VECTOR_DIMENSION);
 
     // Create 6 random MathVectors
     std::vector<MathVector <int> *> vectors;
-    for (int i = 0 ; i < 6 ; i++) {
-        MathVector<int> *random_vector = DirectedGraph<int>::random_vector(vector_dimension);
+    for (int i = 0 ; i < NUM_OF_VECS ; i++) {
+        MathVector<int> *random_vector = DirectedGraph<int>::random_vector(VECTOR_DIMENSION);
         vectors.push_back(random_vector);
     }
 
     // Insert them as pairs to the graph
-    for (int i = 0 ; i < 6 ; i += 2) {
+    for (int i = 0 ; i < NUM_OF_VECS ; i += 2) {
         g->insert(vectors[i], vectors[i+1]);
         auto neighbors_umap = g->get_umap();
 
@@ -28,7 +30,7 @@ void test_directed_graph_insert(void) {
     }
 
     // Try adding more than one neighbor to the first vertex
-    for (int i = 2 ; i < 6 ; i++) {
+    for (int i = 2 ; i < NUM_OF_VECS ; i++) {
         g->insert(vectors[0], vectors[i]);
         auto neighbors_umap = g->get_umap();
 
@@ -39,7 +41,7 @@ void test_directed_graph_insert(void) {
     }
 
     // Deallocate memory
-    for (int i = 0 ; i < 6 ; i++) {
+    for (int i = 0 ; i < NUM_OF_VECS ; i++) {
         delete vectors[i];
     }
     delete g;
@@ -47,17 +49,15 @@ void test_directed_graph_insert(void) {
 
 void test_directed_graph_remove(void) {
     // Create several random math-vectors and push them into a dynamic array (vector)
-    int num_of_vecs = 100;
-    int vector_dimension = 3;
     std::vector<MathVector<int> *> vecs;
-    for (int i = 0; i < num_of_vecs; i++) {
-        vecs.push_back(DirectedGraph<int>::random_vector(vector_dimension));
+    for (int i = 0; i < NUM_OF_VECS; i++) {
+        vecs.push_back(DirectedGraph<int>::random_vector(VECTOR_DIMENSION));
     }
 
     // Initialize a directed graph with 3D vectors of ints
     // Insert them in pais as follows: 0->1, 2->3, 4->5, ...
-    DirectedGraph<int> *g = new DirectedGraph<int>(vector_dimension);
-    for (int i = 0; i < num_of_vecs; i += 2) {
+    DirectedGraph<int> *g = new DirectedGraph<int>(VECTOR_DIMENSION);
+    for (int i = 0; i < NUM_OF_VECS; i += 2) {
         g->insert(vecs[i], vecs[i+1]);
     }
 
@@ -66,12 +66,12 @@ void test_directed_graph_remove(void) {
     TEST_CHECK(!g->remove(vecs[1], vecs[0]));
 
     // Remove every edge an test
-    for (int i = 0; i < num_of_vecs; i += 2) {
+    for (int i = 0; i < NUM_OF_VECS; i += 2) {
         TEST_CHECK(g->remove(vecs[i], vecs[i+1]));
         TEST_CHECK(!g->remove(vecs[i], vecs[i+1])); // Try to remove non-existent edges that were previously inserted
     }
 
-    for (int i = 0; i < num_of_vecs; i++) {
+    for (int i = 0; i < NUM_OF_VECS; i++) {
         delete vecs[i];
     }
     delete g;
