@@ -30,3 +30,23 @@ DirectedGraph<T> *random_graph(std::vector<MathVector<T> *> vectors, int R) {
 
     return random_graph;
 }
+
+// Returns the medoid point of given dataset
+template <typename T>
+MathVector<T> *medoid(std::vector<MathVector<T> *> *vectors) {
+    // Simple brute-force algorithm
+    float min = std::numeric_limits<float>::max();
+    MathVector<T> *v = nullptr;
+    for (auto it1 = vectors.begin(); it1 != vectors.end(); it1++) {
+        float sum = 0.0;
+        for (auto it2 = vectors.begin(); it2 != vectors.end(); it2++) {
+            if (it1 == it2) continue;
+            sum += (*it1)->euclidean_distance(**it2);
+        }
+        if (sum < min) {
+            min = sum;
+            v = *it1;
+        }
+    }
+    return v;
+}
