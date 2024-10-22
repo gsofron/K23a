@@ -1,15 +1,11 @@
-// greedy_search.hpp
-
-#ifndef GREEDY_SEARCH_HPP
-#define GREEDY_SEARCH_HPP
+#pragma once
 
 #include <set>
 #include <unordered_set>
 #include <vector>
-#include "vector.hpp"          // Your MathVector class implementation
-#include "directed_graph.hpp"  // Your DirectedGraph class implementation
+#include "vector.hpp"         
+#include "directed_graph.hpp"  
 
-// Custom comparator for sorting by distance to the query vector
 template <typename T>
 struct CompareDistance {
     MathVector<T>* query;
@@ -32,6 +28,7 @@ GreedySearch(DirectedGraph<T>& graph, MathVector<T>* start, MathVector<T>* query
     L_set.insert(start);
 
     while (!std::all_of(L_set.begin(), L_set.end(), [&](MathVector<T>* node) { return visited.count(node); })) {
+       
         MathVector<T>* p_star = *L_set.begin();
         L_set.erase(L_set.begin());
 
@@ -63,4 +60,3 @@ GreedySearch(DirectedGraph<T>& graph, MathVector<T>* start, MathVector<T>* query
     return {result, return_visited};
 }
 
-#endif  // GREEDY_SEARCH_HPP

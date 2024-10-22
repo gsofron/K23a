@@ -1,5 +1,4 @@
-#ifndef VECTOR_HPP
-#define VECTOR_HPP
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -121,4 +120,3 @@ std::vector<int> *MathVector<T>::query_solutions(const std::string& file_name, i
     return solution_indices;
 }
 
-#endif
