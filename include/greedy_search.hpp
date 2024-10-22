@@ -10,16 +10,16 @@ template <typename T>
 struct CompareDistance {
     MathVector<T>* query;
 
-    CompareDistance(MathVector<T>* query) : query(query) {}
+    CompareDistance(MathVector<T> *query) : query(query) {}
 
-    bool operator()(const MathVector<T>* a, const MathVector<T>* b) const {
+    bool operator()(const MathVector<T> *a, const MathVector<T> *b) const {
         return (a->euclidean_distance(*query) < b->euclidean_distance(*query) || (a->euclidean_distance(*query) == b->euclidean_distance(*query) && a < b));
     }
 };
 
 template <typename T>
 std::pair<std::vector<MathVector<T>*>, std::unordered_set<MathVector<T>*>> 
-GreedySearch(DirectedGraph<T>& graph, MathVector<T>* start, MathVector<T>* query, int k, long unsigned int L) {
+GreedySearch(DirectedGraph<T>& graph, MathVector<T> *start, MathVector<T> *query, int k, int L) {
     CompareDistance<T> comparator(query);
     
     std::set<MathVector<T>*, CompareDistance<T>> L_set(comparator);
@@ -27,9 +27,9 @@ GreedySearch(DirectedGraph<T>& graph, MathVector<T>* start, MathVector<T>* query
     
     L_set.insert(start);
 
-    while (!std::all_of(L_set.begin(), L_set.end(), [&](MathVector<T>* node) { return visited.count(node); })) {
+    while (!std::all_of(L_set.begin(), L_set.end(), [&](MathVector<T> *node) { return visited.count(node); })) {
        
-        MathVector<T>* p_star = *L_set.begin();
+        MathVector<T> *p_star = *L_set.begin();
         L_set.erase(L_set.begin());
 
 
@@ -44,7 +44,7 @@ GreedySearch(DirectedGraph<T>& graph, MathVector<T>* start, MathVector<T>* query
             L_set.insert(neighbor);
         }
 
-        if (L_set.size() > L) {
+        if (L_set.size() > static_cast<unsigned long int>(L)) {
             auto it = L_set.end();
             std::advance(it, -(L_set.size() - L)); 
             L_set.erase(it, L_set.end());         

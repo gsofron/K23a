@@ -10,12 +10,12 @@ std::vector<MathVector<int>*> *generate_vectors() {
     vectors->reserve(10000);
 
     for (int i = 0; i < 10000; ++i) {
-        int* values = new int[3]; 
+        int *values = new int[3]; 
         values[0] = i * 3 + 1;
         values[1] = i * 3 + 2;
         values[2] = i * 3 + 3;
 
-        MathVector<int>* vec = new MathVector<int>(3, values);
+        MathVector<int> *vec = new MathVector<int>(3, values);
         vectors->push_back(vec);
 
         delete[] values;
