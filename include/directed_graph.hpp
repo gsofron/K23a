@@ -57,8 +57,9 @@ void DirectedGraph<T>::insert(MathVector<T> *source, MathVector<T> *destination)
     // Vertex cannot point to itself
     ERROR_EXIT(*source == *destination, "Vertex cannot point to itself");
 
-    // Insert edge. Insertion won't take place if the edge already exists
+    // Insert edge. Insertion won't take place if the edge already exists. Insertion also adds destination as a vertex
     neighbors[source].insert(destination);
+    neighbors[destination];
 }
 
 template <typename T>
