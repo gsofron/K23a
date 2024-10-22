@@ -33,7 +33,7 @@ public:
     }
 
     // Returns a reference to an unordered-set that contains the neighbors of vertex 'v'. 'const' is used to prevent data modification
-    const std::unordered_set<MathVector<T> *>& get_neighbors(MathVector<T> *v) const { return neighbors[v]; }
+    const std::unordered_set<MathVector<T> *>& get_neighbors(MathVector<T> *v);
 
     // Creates a random vector with the given dimension
     static MathVector<T> *random_vector(int dimension);
@@ -66,6 +66,12 @@ bool DirectedGraph<T>::remove(MathVector<T> *source, MathVector<T> *destination)
     ERROR_EXIT(*source == *destination, "Source and destination vertices cannot be the same")
     // Remove the edge, if present
     return neighbors[source].erase(destination) > 0;
+}
+
+template <typename T>
+const std::unordered_set<MathVector<T> *>& DirectedGraph<T>::get_neighbors(MathVector<T> *v) {
+    ERROR_EXIT(neighbors.find(v) == neighbors.end(), "Vector isn't present in the graph") // Assure that 'v' is present in the map
+    return neighbors[v];
 }
 
 // Creates a random vector with the given dimension
