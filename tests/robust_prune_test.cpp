@@ -2,10 +2,11 @@
 
 #include "acutest.h"
 #include "robust_prune.hpp"
+#include "vamana.hpp"
 
 #define NUM_OF_VECS 1000
 #define VECTOR_DIMENSION 5
-#define R 100
+#define R 3
 #define A 1.5
 
 // Returns a point(different from 'p') from set 'V' which is nearest to point 'p'
@@ -40,11 +41,12 @@ void test_robust_prune_general(void) {
     }
 
     // Create a graph where each vertex points to all other vertices
-    DirectedGraph<int> *g = DirectedGraph<int>::random_graph(vectors, NUM_OF_VECS-1);
+    DirectedGraph<int> *g = random_graph(vectors, NUM_OF_VECS-1);
 
+    std::unordered_set<MathVector<int> *> empty = {};
     // Convert graph into an R-regular graph
     for (int i = 0 ; i < NUM_OF_VECS ; i++) {
-        robust_prune(g, vectors[i], {}, A, R);
+        robust_prune(g, vectors[i], empty, A, R);
 
         // Check if Robust Prune successfully returned no more than R neighbors
         const auto& neighbors = g->get_neighbors(vectors[i]);
@@ -70,13 +72,14 @@ void test_robust_prune_empty_set(void) {
     }
 
     // Create a graph where each vertex points to all other vertices
-    DirectedGraph<int> *g = DirectedGraph<int>::random_graph(vectors, NUM_OF_VECS-1);
+    DirectedGraph<int> *g = random_graph(vectors, NUM_OF_VECS-1);
 
+    std::unordered_set<MathVector<int> *> empty = {};
     // Repeat for all vertices
     for (int i = 0 ; i < NUM_OF_VECS ; i++) {
         // Even though an empty set is given, Robust Prune should prune all neighbors except from the actual
         // nearest neighbor of the current vertex. This happens because each vertex points to all other vertices
-        robust_prune(g, vectors[i], {}, A, 1);
+        robust_prune(g, vectors[i], empty, A, 1);
 
         // Check if robust prune successfully returned only 1 neighbor
         const auto& neighbors = g->get_neighbors(vectors[i]);
@@ -112,7 +115,7 @@ void test_robust_prune_full_set(void) {
     }
 
     // Create a graph where each vertex points to only one random vertex
-    DirectedGraph<int> *g = DirectedGraph<int>::random_graph(vectors, 1);
+    DirectedGraph<int> *g = random_graph(vectors, 1);
 
     // Repeat for all vertices
     for (int i = 0 ; i < NUM_OF_VECS ; i++) {

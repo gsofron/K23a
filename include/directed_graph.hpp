@@ -76,10 +76,10 @@ const std::unordered_set<MathVector<T> *>& DirectedGraph<T>::get_neighbors(MathV
 // Creates a random vector with the given dimension
 template <typename T>
 MathVector<T> *DirectedGraph<T>::random_vector(int dimension) {
-    // Get 'dimension' random values ranging from 0 to 99
+    // Get 'dimension' random values ranging from 0 to 9999
     int *values = new int[dimension];
     for (int i = 0 ; i < dimension ; i++) {
-        values[i] = rand() % 100;
+        values[i] = rand() % 10000;
     }
     // Create the MathVector and return it
     MathVector<T> *random = new MathVector<T>(dimension, values);

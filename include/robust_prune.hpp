@@ -19,7 +19,7 @@ struct CustomCompare {
 // Modifies graph 'g' by setting at most 'R' new out-neighbors for point 'p'
 // 'V' is a candidate set containing vertices and 'a' is the distance threshold where a >= 1
 template <typename T>
-void robust_prune(DirectedGraph<T> *g, MathVector<T> *p, std::unordered_set<MathVector<T> *> V, float a, int R) {
+void robust_prune(DirectedGraph<T> *g, MathVector<T> *p, std::unordered_set<MathVector<T> *>& V, float a, int R) {
     ERROR_EXIT(a < 1.0, "a cannot be less than 1");
     ERROR_EXIT(R < 1, "R cannot be less than 1");
 
