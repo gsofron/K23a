@@ -48,6 +48,8 @@ void parse_parameters(int argc, char *argv[], int &k, float &a) {
     }
 }
 
+//./k23a -d 4 -k 5 -a 1.3
+
 int main(int argc, char *argv[]) {
     srand(time(NULL));
 

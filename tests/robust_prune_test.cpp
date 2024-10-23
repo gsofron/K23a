@@ -1,43 +1,31 @@
+#include <limits>   // float max
+
 #include "acutest.h"
 #include "robust_prune.hpp"
 
-#define NUM_OF_VECS 100
-#define VECTOR_DIMENSION 128
-#define R 10
+#define NUM_OF_VECS 1000
+#define VECTOR_DIMENSION 5
+#define R 100
 #define A 1.5
 
-// General test for nearest_point_in_set
-void test_nearest_point_in_set(void) {
-    srand(time(NULL));
+// Returns a point(different from 'p') from set 'V' which is nearest to point 'p'
+// Returns nullptr if set is empty
+template <typename T>
+MathVector<T> *nearest_point_in_set(MathVector<T> *p, std::unordered_set<MathVector<T> *> V) {
+    float min_distance = std::numeric_limits<float>::max();
+    MathVector<T> *nearest_point = nullptr;
 
-    // Create random vectors
-    std::vector<MathVector <int> *> vectors;
-    for (int i = 0 ; i < NUM_OF_VECS ; i++) {
-        MathVector<int> *random_vector = DirectedGraph<int>::random_vector(VECTOR_DIMENSION);
-        vectors.push_back(random_vector);
-    }
+    for (MathVector<T> *point : V) {
+        if (*point == *p) continue;
 
-    // If an empty set is given, nearest_point_in_set should return nullptr
-    TEST_CHECK(nearest_point_in_set(vectors[0], {}) == nullptr);
-
-    // For all vectors
-    for (int i = 0 ; i < NUM_OF_VECS ; i++) {
-        // Get the set containing all vertices except the current one
-        std::unordered_set<MathVector<int> *> s(vectors.begin(), vectors.end());
-        s.erase(vectors[i]);
-
-        // Get nearest point and distance
-        MathVector<int> *nearest = nearest_point_in_set(vectors[i], s);
-        float nearest_distance = vectors[i]->euclidean_distance(*nearest);
-
-
-        // Make sure no other points are closer
-        for (int j = 0 ; j < NUM_OF_VECS ; j++) {
-            if (i == j) continue;
-
-            TEST_CHECK(vectors[i]->euclidean_distance(*vectors[j]) >= nearest_distance);
+        float distance = p->euclidean_distance(*point);
+        if (distance < min_distance) {
+            min_distance = distance;
+            nearest_point = point;
         }
     }
+
+    return nearest_point;
 }
 
 // General test for robust_prune
@@ -58,7 +46,7 @@ void test_robust_prune_general(void) {
     for (int i = 0 ; i < NUM_OF_VECS ; i++) {
         robust_prune(g, vectors[i], {}, A, R);
 
-        // Check if robust prune successfully returned no more than R neighbors
+        // Check if Robust Prune successfully returned no more than R neighbors
         const auto& neighbors = g->get_neighbors(vectors[i]);
         TEST_CHECK(neighbors.size() <= R);
     }
@@ -93,16 +81,16 @@ void test_robust_prune_empty_set(void) {
         // Check if robust prune successfully returned only 1 neighbor
         const auto& neighbors = g->get_neighbors(vectors[i]);
         TEST_CHECK(neighbors.size() == 1);
-
-        // Get the set containing all vertices except the current one
-        std::unordered_set<MathVector<int> *> s(vectors.begin(), vectors.end());
-        s.erase(vectors[i]);
+        MathVector<int> *neighbor = *neighbors.begin();
 
         // Find the actual nearest point
+        std::unordered_set<MathVector<int> *> s(vectors.begin(), vectors.end());
         MathVector<int> *nearest = nearest_point_in_set(vectors[i], s);
 
-        // Check if this is the only neighbor of current vertex
-        TEST_CHECK(neighbors.find(nearest) != neighbors.end());
+        // Check if they are the same. If not, they should at least have the same distance
+        float dist1 = vectors[i]->euclidean_distance(*neighbor);
+        float dist2 = vectors[i]->euclidean_distance(*nearest);
+        TEST_CHECK(*neighbor == *nearest || dist1 == dist2);
     }
 
     // Deallocate memory
@@ -128,23 +116,25 @@ void test_robust_prune_full_set(void) {
 
     // Repeat for all vertices
     for (int i = 0 ; i < NUM_OF_VECS ; i++) {
-        // Get the set containing all vertices except the current one
+        // Get the set containing all vertices
         std::unordered_set<MathVector<int> *> s(vectors.begin(), vectors.end());
-        s.erase(vectors[i]);
         
         // Even though each vertex only has one random neighbor, Robust Prune should replace it with the
-        // actual nearest neighbor of the current vertex since set 's' contains all other vertices
+        // actual nearest neighbor of the current vertex since set 's' contains all vertices
         robust_prune(g, vectors[i], s, A, 1);
 
         // Check if robust prune successfully returned only 1 neighbor
         const auto& neighbors = g->get_neighbors(vectors[i]);
         TEST_CHECK(neighbors.size() == 1);
+        MathVector<int> *neighbor = *neighbors.begin();
 
         // Find the actual nearest point
         MathVector<int> *nearest = nearest_point_in_set(vectors[i], s);
 
-        // Check if this is the only neighbor of current vertex
-        TEST_CHECK(neighbors.find(nearest) != neighbors.end());
+        // Check if they are the same. If not, they should at least have the same distance
+        float dist1 = vectors[i]->euclidean_distance(*neighbor);
+        float dist2 = vectors[i]->euclidean_distance(*nearest);
+        TEST_CHECK(*neighbor == *nearest || dist1 == dist2);
     }
 
     // Deallocate memory
@@ -155,7 +145,6 @@ void test_robust_prune_full_set(void) {
 }
 
 TEST_LIST = {
-    { "test_nearest_point_in_set", test_nearest_point_in_set },
     { "test_robust_prune_general", test_robust_prune_general },
     { "test_robust_prune_empty_set", test_robust_prune_empty_set },
     { "test_robust_prune_full_set", test_robust_prune_full_set },
