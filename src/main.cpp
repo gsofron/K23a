@@ -4,6 +4,7 @@
 #include <unistd.h>     // getopt()
 
 #include "directed_graph.hpp"
+#include "robust_prune.hpp"
 #include "vector.hpp"
 
 int vector_dimension;
@@ -47,6 +48,8 @@ void parse_parameters(int argc, char *argv[], int &k, float &a) {
     }
 }
 
+//./k23a -d 4 -k 5 -a 1.3
+
 int main(int argc, char *argv[]) {
     srand(time(NULL));
 
@@ -78,13 +81,22 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl;
 
     // Create a random graph
+    std::cout << "-----Creating a random graph where each vertex has 5 neighbors-----" << std::endl;
     DirectedGraph<int> *g = DirectedGraph<int>::random_graph(vectors, 5);
-    std::cout << "-----Creating a random graph where each vertex has 5 neighbors-----" << std::endl << *g << std::endl;
-    delete g;
+    std::cout << *g << std::endl;
+
+    // Prune it with R = 3
+    for (int i = 0 ; i < total_vectors ; i++) {
+        robust_prune<int>(g, vectors[i], {}, a, 3);
+    } 
+
+    std::cout << std::endl << "-----New Graph-----" << std::endl;
+    std::cout << *g << std::endl;
 
     // Deallocate memory
     for (int i = 0 ; i < total_vectors ; i++) {
         delete vectors[i];
     }
+    delete g;
     return 0;
 }

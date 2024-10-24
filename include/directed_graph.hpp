@@ -37,8 +37,6 @@ public:
 
     // Creates a random vector with the given dimension
     static MathVector<T> *random_vector(int dimension);
-    // Creates a random graph using a vector of MathVectors. Each vertex will have 'n' neighbors
-    static DirectedGraph<T> *random_graph(std::vector<MathVector <int> *> vectors, int n);
 
     // Accessor used for testing
     const std::unordered_map<MathVector<T> *, std::unordered_set<MathVector<T> *>>& get_umap() const { return neighbors; }
@@ -78,45 +76,13 @@ const std::unordered_set<MathVector<T> *>& DirectedGraph<T>::get_neighbors(MathV
 // Creates a random vector with the given dimension
 template <typename T>
 MathVector<T> *DirectedGraph<T>::random_vector(int dimension) {
-    // Get 'dimension' random values ranging from 0 to 99
+    // Get 'dimension' random values ranging from 0 to 9999
     int *values = new int[dimension];
     for (int i = 0 ; i < dimension ; i++) {
-        values[i] = rand() % 100;
+        values[i] = rand() % 10000;
     }
     // Create the MathVector and return it
     MathVector<T> *random = new MathVector<T>(dimension, values);
     delete[] values;
     return random;
-}
-
-// Creates a random graph using a vector of MathVectors. Each vertex will have 'n' neighbors
-template <typename T>
-DirectedGraph<T> *DirectedGraph<T>::random_graph(std::vector<MathVector <int> *> vectors, int n) {
-    int vector_count = vectors.size();
-
-    // If there are k vertices, each vertex can have at most k-1 neighbours
-    ERROR_EXIT(n > vector_count-1, "Too many neighbors");
-
-    DirectedGraph<T> *random_graph = new DirectedGraph<T>(vectors[0]->dimension());
-    // Repeat for all vertices
-    for (int i = 0 ; i < vector_count ; i++) {
-        // Save vertices that have already been picked
-        int picked_indexes[vector_count];
-        for (int k = 0 ; k < vector_count ; k++) {
-            picked_indexes[k] = 0;
-        }
-        // Vertex cannot point to itself
-        picked_indexes[i] = 1;
-
-        // Choose a non-repeating new neighbour randomly
-        for (int j = 0 ; j < n ; j++) {
-            int index = rand() % vector_count;
-            while (picked_indexes[index]) index = rand() % vector_count;
-            picked_indexes[index] = 1;
-
-            random_graph->insert(vectors[i], vectors[index]);
-        }
-    }
-    
-    return random_graph;
 }

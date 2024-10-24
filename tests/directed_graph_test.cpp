@@ -5,6 +5,8 @@
 #define VECTOR_DIMENSION 5
 
 void test_directed_graph_insert(void) {
+    srand(time(NULL));
+
     DirectedGraph<int> *g = new DirectedGraph<int>(VECTOR_DIMENSION);
 
     // Create 6 random MathVectors
@@ -48,6 +50,8 @@ void test_directed_graph_insert(void) {
 }
 
 void test_directed_graph_remove(void) {
+    srand(time(NULL));
+
     // Create several random math-vectors and push them into a dynamic array (vector)
     std::vector<MathVector<int> *> vecs;
     for (int i = 0; i < NUM_OF_VECS; i++) {
