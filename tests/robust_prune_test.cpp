@@ -12,7 +12,7 @@
 // Returns a point(different from 'p') from set 'V' which is nearest to point 'p'
 // Returns nullptr if set is empty
 template <typename T>
-MathVector<T> *nearest_point_in_set(MathVector<T> *p, std::unordered_set<MathVector<T> *> V) {
+MathVector<T> *nearest_point_in_set(MathVector<T> *p, std::set<MathVector<T>*, CompareDistance<T>> V) {
     float min_distance = std::numeric_limits<float>::max();
     MathVector<T> *nearest_point = nullptr;
 
@@ -43,9 +43,10 @@ void test_robust_prune_general(void) {
     // Create a graph where each vertex points to all other vertices
     DirectedGraph<int> *g = random_graph(vectors, NUM_OF_VECS-1);
 
-    std::unordered_set<MathVector<int> *> empty = {};
     // Convert graph into an R-regular graph
     for (int i = 0 ; i < NUM_OF_VECS ; i++) {
+        CompareDistance<int> comparator(vectors[i]); 
+        std::set<MathVector<int>*, CompareDistance<int>> empty(comparator);
         robust_prune(g, vectors[i], empty, A, R);
 
         // Check if Robust Prune successfully returned no more than R neighbors
@@ -79,6 +80,8 @@ void test_robust_prune_empty_set(void) {
     for (int i = 0 ; i < NUM_OF_VECS ; i++) {
         // Even though an empty set is given, Robust Prune should prune all neighbors except from the actual
         // nearest neighbor of the current vertex. This happens because each vertex points to all other vertices
+        CompareDistance<int> comparator(vectors[i]); 
+        std::set<MathVector<int>*, CompareDistance<int>> empty(comparator);
         robust_prune(g, vectors[i], empty, A, 1);
 
         // Check if robust prune successfully returned only 1 neighbor
@@ -87,7 +90,10 @@ void test_robust_prune_empty_set(void) {
         MathVector<int> *neighbor = *neighbors.begin();
 
         // Find the actual nearest point
-        std::unordered_set<MathVector<int> *> s(vectors.begin(), vectors.end());
+        std::set<MathVector<int>*, CompareDistance<int>> s(comparator);
+        for (auto v : vectors) {
+            s.insert(v);
+        }
         MathVector<int> *nearest = nearest_point_in_set(vectors[i], s);
 
         // Check if they are the same. If not, they should at least have the same distance
@@ -120,7 +126,11 @@ void test_robust_prune_full_set(void) {
     // Repeat for all vertices
     for (int i = 0 ; i < NUM_OF_VECS ; i++) {
         // Get the set containing all vertices
-        std::unordered_set<MathVector<int> *> s(vectors.begin(), vectors.end());
+        CompareDistance<int> comparator(vectors[i]); 
+        std::set<MathVector<int>*, CompareDistance<int>> s(comparator);
+        for (auto v : vectors) {
+            s.insert(v);
+        }
         
         // Even though each vertex only has one random neighbor, Robust Prune should replace it with the
         // actual nearest neighbor of the current vertex since set 's' contains all vertices

@@ -5,28 +5,10 @@
 #include <vector>
 #include "vector.hpp"        
 #include "directed_graph.hpp"  
+#include "utils.hpp"
 
 template <typename T>
-struct CompareDistance {
-    MathVector<T>* query;  
-
-    CompareDistance(MathVector<T> *query) : query(query) {}
-
-    bool operator()(const MathVector<T> *a, const MathVector<T> *b) const {
-        return (a->euclidean_distance(*query) < b->euclidean_distance(*query) || 
-                (a->euclidean_distance(*query) == b->euclidean_distance(*query) && a < b));
-    }
-};
-
-/**
- * @param graph The directed graph
- * @param start The starting node 
- * @param query The query node
- * @param k Number of nearest neighbors
- * @param L Maximum number of the searching list
- */
-template <typename T>
-std::pair<std::vector<MathVector<T>*>, std::unordered_set<MathVector<T>*>> 
+std::pair<std::vector<MathVector<T>*>, std::set<MathVector<T>*, CompareDistance<T>>> 
 GreedySearch(DirectedGraph<T>& graph, MathVector<T> *start, MathVector<T> *query, int k, int L) {
     CompareDistance<T> comparator(query);  
 
@@ -67,6 +49,5 @@ GreedySearch(DirectedGraph<T>& graph, MathVector<T> *start, MathVector<T> *query
         result.push_back(*it); 
     }
 
-    std::unordered_set<MathVector<T>*> return_visited(visited.begin(), visited.end());
-    return {result, return_visited};
+    return {result, visited};
 }

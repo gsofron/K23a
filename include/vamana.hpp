@@ -81,7 +81,11 @@ DirectedGraph<T> *vamana(std::vector<MathVector<T> *> *P, float a, int L, int R)
         for (auto j : N_out_sigma_i) {
             const auto& N_out_j = G->get_neighbors(j);
             if ((int)N_out_j.size() + 1 > R) {
-                auto new_N_out_j = N_out_j;
+                CompareDistance<T> comparator(j);
+                std::set<MathVector<T>*, CompareDistance<T>> new_N_out_j(comparator);
+                for (auto v : N_out_j) {
+                    new_N_out_j.insert(v);
+                }
                 new_N_out_j.insert(sigma[i]);
                 robust_prune(G, j, new_N_out_j, a, R);
             } else {
