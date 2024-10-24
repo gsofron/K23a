@@ -20,7 +20,10 @@ void test_vamana(void) {
     // Create the Vamana graph
     DirectedGraph<int> *g = vamana(&vectors, A, L, R);
 
-    std::cout << *g << std::endl;
+    // Test the out-degree of each vertex. It should be <= R
+    for (auto v : vectors) {
+        TEST_CHECK(g->get_neighbors(v).size() <= R);
+    }
 
     for (int i = 0; i < NUM_OF_VECS; i++) {
         delete vectors[i];
