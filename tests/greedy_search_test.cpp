@@ -68,6 +68,9 @@ void test_greedy_search(void) {
 
     destroy_vector(vectors);
     delete query;
+    for (auto i = 0 ; i < 5 ; i++) {
+        delete solutions.at(i);
+    }
 }
 
 TEST_LIST = {
