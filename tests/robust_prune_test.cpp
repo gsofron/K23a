@@ -7,27 +7,7 @@
 #define NUM_OF_VECS 1000
 #define VECTOR_DIMENSION 5
 #define R 3
-#define A 1.5
-
-// Returns a point(different from 'p') from set 'V' which is nearest to point 'p'
-// Returns nullptr if set is empty
-template <typename T>
-MathVector<T> *nearest_point_in_set(MathVector<T> *p, std::set<MathVector<T>*, CompareDistance<T>> V) {
-    float min_distance = std::numeric_limits<float>::max();
-    MathVector<T> *nearest_point = nullptr;
-
-    for (MathVector<T> *point : V) {
-        if (*point == *p) continue;
-
-        float distance = p->euclidean_distance(*point);
-        if (distance < min_distance) {
-            min_distance = distance;
-            nearest_point = point;
-        }
-    }
-
-    return nearest_point;
-}
+#define A 1.5f
 
 // General test for robust_prune
 void test_robust_prune_general(void) {
@@ -75,7 +55,6 @@ void test_robust_prune_empty_set(void) {
     // Create a graph where each vertex points to all other vertices
     DirectedGraph<int> *g = random_graph(vectors, NUM_OF_VECS-1);
 
-    std::unordered_set<MathVector<int> *> empty = {};
     // Repeat for all vertices
     for (int i = 0 ; i < NUM_OF_VECS ; i++) {
         // Even though an empty set is given, Robust Prune should prune all neighbors except from the actual
@@ -94,11 +73,13 @@ void test_robust_prune_empty_set(void) {
         for (auto v : vectors) {
             s.insert(v);
         }
-        MathVector<int> *nearest = nearest_point_in_set(vectors[i], s);
+        // First point of set s is vectors[i], so the actual nearest point is the second one
+        MathVector<int> *nearest = *(++s.begin());
 
         // Check if they are the same. If not, they should at least have the same distance
         float dist1 = vectors[i]->euclidean_distance(*neighbor);
         float dist2 = vectors[i]->euclidean_distance(*nearest);
+
         TEST_CHECK(*neighbor == *nearest || dist1 == dist2);
     }
 
@@ -141,12 +122,18 @@ void test_robust_prune_full_set(void) {
         TEST_CHECK(neighbors.size() == 1);
         MathVector<int> *neighbor = *neighbors.begin();
 
-        // Find the actual nearest point
-        MathVector<int> *nearest = nearest_point_in_set(vectors[i], s);
+        // s was passed by reference in robust_prune, so rebuild it
+        s.clear();
+        for (auto v : vectors) {
+            s.insert(v);
+        }
+        // First point of set s is vectors[i], so the actual nearest point is the second one
+        MathVector<int> *nearest = *(++s.begin());
 
         // Check if they are the same. If not, they should at least have the same distance
         float dist1 = vectors[i]->euclidean_distance(*neighbor);
         float dist2 = vectors[i]->euclidean_distance(*nearest);
+
         TEST_CHECK(*neighbor == *nearest || dist1 == dist2);
     }
 
