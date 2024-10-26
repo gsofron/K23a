@@ -1,5 +1,6 @@
 #include <algorithm>        // std::find()
 #include <cstdlib>          // rand()
+#include <iostream>
 
 #include "directed_graph.hpp"
 #include "utils.hpp"
@@ -19,36 +20,22 @@
 //     neighbors[destination];
 // }
 
-// template <typename T>
-// bool DirectedGraph<T>::remove(MathVector<T> *source, MathVector<T> *destination) {
-//     ERROR_EXIT(*source == *destination, "Source and destination vertices cannot be the same")
-//     // Remove the edge, if present
-//     return neighbors[source].erase(destination) > 0;
-// }
+bool DirectedGraph::remove(Vertex source, Vertex destination) {
+    ERROR_EXIT(source < 0 || source >= neighbors_size, "Invalid index (vertex)")
+    ERROR_EXIT(destination < 0 || destination >= neighbors_size, "Invalid index (vertex)")
+    ERROR_EXIT(source == destination, "Source and destination vertices cannot be the same")
+    // Remove the edge, if present
+    return neighbors[source].erase(destination) > 0;
+}
 
-// template <typename T>
-// const std::unordered_set<MathVector<T> *>& DirectedGraph<T>::get_neighbors(MathVector<T> *v) {
-//     ERROR_EXIT(neighbors.find(v) == neighbors.end(), "Vector isn't present in the graph") // Assure that 'v' is present in the map
-//     return neighbors[v];
-// }
-
-// // Creates a random vector with the given dimension
-// template <typename T>
-// MathVector<T> *DirectedGraph<T>::random_vector(int dimension) {
-//     // Get 'dimension' random values ranging from 0 to 9999
-//     int *values = new int[dimension];
-//     for (int i = 0 ; i < dimension ; i++) {
-//         values[i] = rand() % 10000;
-//     }
-//     // Create the MathVector and return it
-//     MathVector<T> *random = new MathVector<T>(dimension, values);
-//     delete[] values;
-//     return random;
-// }
+const std::unordered_set<Vertex>& DirectedGraph::get_neighbors(Vertex v) {
+    ERROR_EXIT(v < 0 || v >= neighbors_size, "Invalid index (vertex)")
+    return neighbors[v];
+}
 
 // // Overload '<<' operator to print the graph with ease
-// friend std::ostream& operator<<(std::ostream& os, const DirectedGraph& g) {
-//     for (const auto& pair : g.neighbors) { // for every MathVector-Neighbors (key-value) pair
+// std::ostream& operator<<(std::ostream& os, const DirectedGraph& g) {
+//     for (int i = 0; i < neighbors_size; i++) {
 //         os << "Vector's " << *pair.first << " KNNs: " << pair.second << "\n";
 //     }
 //     return os;
