@@ -1,88 +1,33 @@
 #pragma once
 
-#include <algorithm>        // std::find()
-#include <cstdlib>          // rand()
-#include <unordered_map>    // std::unordered_map etc.
 #include <unordered_set>    // std::unordered_set etc.
 
-#include "vector.hpp"
-#include "utils.hpp"
+typedef int Vertex;
 
-// Directed Graph Implementation using unordered-map and unordered-sets
-// Unordered map is used to map vertices(MathVectors) to neighbors(unordered-set of MathVectors)
+// Directed Graph Implementation using an array of unordered-sets
+// The graph stores indexes of math-vectors to the array (vector) contatining the actual data
+// Unordered sets are used to store the indexes of each vertex's neighbors
 
-template <typename T>
 class DirectedGraph {
 public:
-    // Create a directed graph with MathVectors as its vertices.
-    // All vertices have the same given dimension
-    DirectedGraph(int dimension) { this->dimension = dimension; }
+    // Create a directed graph with 'num_of_indexes' number of vertices
+    DirectedGraph(int num_of_indexes);
 
     // Insert edge ('source', 'destination') to graph
-    void insert(MathVector<T> *source, MathVector<T> *destination);
+    void insert(Vertex source, Vertex destination);
 
     // Remove edge ('source', 'destination') from graph if present
-    bool remove(MathVector<T> *source, MathVector<T> *destination);
-
-    // Overload '<<' operator to print the graph with ease
-    friend std::ostream& operator<<(std::ostream& os, const DirectedGraph<T>& dg) {
-        for (const auto& pair : dg.neighbors) { // for every MathVector-Neighbors (key-value) pair
-            os << "Vector's " << *pair.first << " KNNs: " << pair.second << "\n";
-        }
-        return os;
-    }
+    bool remove(Vertex source, Vertex destination);
 
     // Returns a reference to an unordered-set that contains the neighbors of vertex 'v'. 'const' is used to prevent data modification
-    const std::unordered_set<MathVector<T> *>& get_neighbors(MathVector<T> *v);
+    const std::unordered_set<Vertex>& get_neighbors(Vertex v);
 
-    // Creates a random vector with the given dimension
-    static MathVector<T> *random_vector(int dimension);
+    // Overload '<<' operator to print the graph with ease
+    friend std::ostream& operator<<(std::ostream& os, const DirectedGraph& g);
 
-    // Accessor used for testing
-    const std::unordered_map<MathVector<T> *, std::unordered_set<MathVector<T> *>>& get_umap() const { return neighbors; }
 private:
-    int dimension;      // The dimension of all MathVectors
-    std::unordered_map<MathVector<T> *, std::unordered_set<MathVector<T> *>> neighbors; // Unordered map representing the adjacency list
+    // Array of sets. Each set contains the neighbors of the vector in the corresponding array index
+    // Example: Neighbors of vector with index 4 are in neighbors[4] unordered set
+    // Neighbors are also stored in index-format
+    std::unordered_set<Vertex> *neighbors;
 };
-
-// Insert edge ('source', 'destination') to graph
-template <typename T>
-void DirectedGraph<T>::insert(MathVector<T> *source, MathVector<T> *destination) {
-    // All MathVectors in the graph have the same dimension
-    ERROR_EXIT((int) source->dimension() != this->dimension, "Source vertex has different dimension");
-    ERROR_EXIT((int) destination->dimension() != this->dimension, "Destination vertex has different dimension");
-
-    // Vertex cannot point to itself
-    ERROR_EXIT(*source == *destination, "Vertex cannot point to itself");
-
-    // Insert edge. Insertion won't take place if the edge already exists. Insertion also adds destination as a vertex
-    neighbors[source].insert(destination);
-    neighbors[destination];
-}
-
-template <typename T>
-bool DirectedGraph<T>::remove(MathVector<T> *source, MathVector<T> *destination) {
-    ERROR_EXIT(*source == *destination, "Source and destination vertices cannot be the same")
-    // Remove the edge, if present
-    return neighbors[source].erase(destination) > 0;
-}
-
-template <typename T>
-const std::unordered_set<MathVector<T> *>& DirectedGraph<T>::get_neighbors(MathVector<T> *v) {
-    ERROR_EXIT(neighbors.find(v) == neighbors.end(), "Vector isn't present in the graph") // Assure that 'v' is present in the map
-    return neighbors[v];
-}
-
-// Creates a random vector with the given dimension
-template <typename T>
-MathVector<T> *DirectedGraph<T>::random_vector(int dimension) {
-    // Get 'dimension' random values ranging from 0 to 9999
-    int *values = new int[dimension];
-    for (int i = 0 ; i < dimension ; i++) {
-        values[i] = rand() % 10000;
-    }
-    // Create the MathVector and return it
-    MathVector<T> *random = new MathVector<T>(dimension, values);
-    delete[] values;
-    return random;
-}
