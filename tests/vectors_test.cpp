@@ -1,5 +1,5 @@
 #include "acutest.h"  
-#include "vector.hpp"
+#include "vectors.hpp"
 #include <iostream>
 #include <vector>                      
 #include <cstring>
@@ -8,14 +8,12 @@
 
 #define N 10000
 
-void test_vectors_init_by_file(void) {
+void test_vectors_constructor(void) {
     int num_vectors;
 
-    auto *vectors = MathVector<float>::init_from_file("siftsmall/siftsmall_base.fvecs", num_vectors, N);
-    
-    int vector_dimension = (*vectors)[0]->dimension();
-
-    TEST_CHECK(vectors->size() == N); 
+    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", num_vectors, N);
+    std::cout << "size" << sizeof(vectors) << std::endl;
+    int vector_dimension = vectors.dimension(0);
 
     const float init_values[] = {
         0.00, 16.00, 35.00, 5.00, 32.00, 31.00, 14.00, 10.00, 11.00, 78.00, 
@@ -34,28 +32,24 @@ void test_vectors_init_by_file(void) {
         0.00, 0.00, 2.00, 8.00, 19.00, 25.00, 23.00, 1.00
     };
 
-    MathVector<float> expected_vector(vector_dimension, init_values);
+    std::vector<float> expected_vector(init_values, init_values + vector_dimension);
 
-    TEST_CHECK(expected_vector == *(vectors->at(0)));
-
-    destroy_vector(vectors);
+    TEST_CHECK(expected_vector == vectors[0]);
 }
 
 void test_vectors_euclidean_distance(void) {
     int num_vectors;
     const float EPSILON = 0.001f;
 
-    auto *vectors = MathVector<float>::init_from_file("siftsmall/siftsmall_base.fvecs", num_vectors, N);
+    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", num_vectors, N);
     
-    float distance = vectors->at(0)->euclidean_distance(*(vectors->at(1)));
+    float distance = vectors.euclidean_distance(0, 1);
 
     TEST_CHECK(std::fabs(distance - 368.957f) < EPSILON); 
-
-    destroy_vector(vectors);
 }
 
 TEST_LIST = {
-    { "test_vectors_init_by_file", test_vectors_init_by_file },
+    { "test_vectors_constructor", test_vectors_constructor },
     { "test_vectors_euclidean_distance", test_vectors_euclidean_distance },
     { NULL, NULL } 
 };
