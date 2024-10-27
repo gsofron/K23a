@@ -35,15 +35,7 @@ bool DirectedGraph::remove(Vertex source, Vertex destination) {
     return neighbors[source].erase(destination) > 0;
 }
 
-const std::unordered_set<Vertex>& DirectedGraph::get_neighbors(Vertex v) {
+const std::unordered_set<Vertex>& DirectedGraph::get_neighbors(Vertex v) const {
     ERROR_EXIT(v < 0 || v >= neighbors_size, "Invalid index (vertex)")
     return neighbors[v];
 }
-
-// // Overload '<<' operator to print the graph with ease
-// std::ostream& operator<<(std::ostream& os, const DirectedGraph& g) {
-//     for (int i = 0; i < neighbors_size; i++) {
-//         os << "Vector's " << *pair.first << " KNNs: " << pair.second << "\n";
-//     }
-//     return os;
-// }

@@ -23,13 +23,11 @@ public:
     bool remove(Vertex source, Vertex destination);
 
     // Returns a reference to an unordered-set that contains the neighbors of vertex 'v'. 'const' is used to prevent data modification
-    const std::unordered_set<Vertex>& get_neighbors(Vertex v);
+    const std::unordered_set<Vertex>& get_neighbors(Vertex v) const;
 
     // Size accessor
     int get_size() const { return neighbors_size; }
 
-    // Overload '<<' operator to print the graph with ease
-    friend std::ostream& operator<<(std::ostream& os, const DirectedGraph& g);
 private:
     // Array of sets. Each set contains the neighbors of the vector in the corresponding array index
     // Example: Neighbors of vector with index 4 are in neighbors[4] unordered set
