@@ -1,24 +1,31 @@
-#include <algorithm>        // std::find()
-#include <cstdlib>          // rand()
 #include <iostream>
 
 #include "directed_graph.hpp"
 #include "utils.hpp"
 
-// // Insert edge ('source', 'destination') to graph
-// template <typename T>
-// void DirectedGraph<T>::insert(MathVector<T> *source, MathVector<T> *destination) {
-//     // All MathVectors in the graph have the same dimension
-//     ERROR_EXIT((int) source->dimension() != this->dimension, "Source vertex has different dimension");
-//     ERROR_EXIT((int) destination->dimension() != this->dimension, "Destination vertex has different dimension");
+// Create a directed graph with 'num_of_vertices' number of vertices
+DirectedGraph::DirectedGraph(int num_of_vertices) {
+    neighbors_size = num_of_vertices;
+    neighbors = new std::unordered_set<Vertex>[num_of_vertices];
+}
 
-//     // Vertex cannot point to itself
-//     ERROR_EXIT(*source == *destination, "Vertex cannot point to itself");
+// De-allocate memory
+DirectedGraph::~DirectedGraph() {
+    delete [] neighbors;
+}
 
-//     // Insert edge. Insertion won't take place if the edge already exists. Insertion also adds destination as a vertex
-//     neighbors[source].insert(destination);
-//     neighbors[destination];
-// }
+// Insert edge ('source', 'destination') to graph
+void DirectedGraph::insert(Vertex source, Vertex destination) {
+    // Check if both vertices are in bounds
+    ERROR_EXIT(source < 0 || source >= neighbors_size, "Source vertex is out of bounds");
+    ERROR_EXIT(destination < 0 || destination >= neighbors_size, "Destination vertex is out of bounds");
+
+    // Vertex cannot point to itself
+    ERROR_EXIT(source == destination, "Vertex cannot point to itself");
+
+    // Insert edge. Insertion won't take place if the edge already exists.
+    neighbors[source].insert(destination);
+}
 
 bool DirectedGraph::remove(Vertex source, Vertex destination) {
     ERROR_EXIT(source < 0 || source >= neighbors_size, "Invalid index (vertex)")
