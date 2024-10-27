@@ -1,6 +1,8 @@
 #include <cstdlib>      // srand()
 #include <ctime>        // time(NULL) for srand
+#include <fstream>      // ifstream
 #include <iostream>     // std:cerr etc.
+#include <string>       // std::string
 #include <unistd.h>     // getopt()
 
 #include "directed_graph.hpp"
@@ -8,19 +10,36 @@
 #include "vamana.hpp"
 #include "vector.hpp"
 
-// ./k23a -n 5000 -d 128 -k 5 -a 1.3 -l 5 -r 3
+// ./k23a -f siftsmall/siftsmall_base.fvecs -t 1 -n 10000 -d 128 -k 5 -a 1.3 -l 5 -r 3
 
-void parse_parameters(int argc, char *argv[], int &total_vectors, int &vector_dimension, int &k, float &a, int &L, int &R) {
+void parse_parameters(int argc, char *argv[], std::string &filename, int &field_type, int &total_vectors, int &vector_dimension, int &k, float &a, int &L, int &R) {
     int opt;
+    std::ifstream file;
+
     // Make sure user gives all parameters
-    if (argc != 13) {
-        std::cerr << "Usage: " << argv[0] << " -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
+    if (argc != 17) {
+        std::cerr << "Usage: " << argv[0] << " -f <filename> -t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
     // Parse parameters
-    while ((opt = getopt(argc, argv, "n:d:k:a:l:r:")) != -1) {
+    while ((opt = getopt(argc, argv, "f:t:n:d:k:a:l:r:")) != -1) {
         switch (opt) {
+        case 'f':
+            filename = optarg;
+            file.open(filename);
+            if (!file) {
+                std::cerr << "File doesn't exist" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
+        case 't':
+            field_type = atoi(optarg);
+            if (field_type < 0 || field_type > 2) {
+                std::cerr << "Invalid field type: Type 0 for unsigned char, 1 for float, 2 for int" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
         case 'n':
             total_vectors = atoi(optarg);
             if (total_vectors <= 0) {
@@ -64,7 +83,7 @@ void parse_parameters(int argc, char *argv[], int &total_vectors, int &vector_di
             }
             break;
         default:
-            std::cerr << "Usage: " << argv[0] << " -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
+            std::cerr << "Usage: " << argv[0] << " -f <filename> -t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
             exit(EXIT_FAILURE);
         }
     }
@@ -75,9 +94,10 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
 
     // Get command line arguements
-    int total_vectors, vector_dimension, k, L, R;
+    int total_vectors, vector_dimension, k, L, R, field_type;
     float a;
-    parse_parameters(argc, argv, total_vectors, vector_dimension, k, a, L, R);
+    std::string filename;
+    parse_parameters(argc, argv, filename, field_type, total_vectors, vector_dimension, k, a, L, R);
 
     // k must be total_vectors-1 or less
     if (k >= total_vectors) {
@@ -92,9 +112,11 @@ int main(int argc, char *argv[]) {
 
     // Read all vectors from file
     int read_vectors;
-    auto *vectors = MathVector<float>::init_from_file("siftsmall/siftsmall_base.fvecs", read_vectors, total_vectors);
+    auto *vectors = MathVector<float>::init_from_file(filename, read_vectors, total_vectors);
 
     std::cout << "-----Parameters-----" << std::endl;
+    std::cout << "Filename = " << filename << std::endl;
+    std::cout << "Field type = " << field_type << std::endl;
     std::cout << "Total vectors = " << total_vectors << std::endl;
     std::cout << "Vectors read = " << read_vectors << std::endl;
     std::cout << "Vector dimension = " << vector_dimension << std::endl;
