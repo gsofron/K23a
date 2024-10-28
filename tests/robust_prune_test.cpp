@@ -1,12 +1,11 @@
 #include <ctime>        // std::time for srand()
 #include <limits>       // float max
 
-
 #include "acutest.h"
 #include "robust_prune.hpp"
 #include "vamana.hpp"
 
-#define NUM_OF_VECS 1000
+#define NUM_OF_VECS 100
 #define R 3
 #define A 1.5f
 

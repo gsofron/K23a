@@ -1,5 +1,6 @@
 #include <algorithm>    // std::random_shuffle
 #include <ctime>        // std::time for srand()
+#include <random>       // for shuffling
 #include <vector>       // std::vector
 
 #include "acutest.h"
@@ -21,16 +22,17 @@ void test_directed_graph_init(void) {
 }
 
 void test_directed_graph_insert(void) {
-    std::srand(unsigned(std::time(0)));
-
     DirectedGraph *g = new DirectedGraph(NUM_OF_ENTRIES);
 
     // Store 0, 1, ..., NUM_OF_ENTRIES-1 to a vector and randomly shuffle them
+    // Source for how to shuffle: https://stackoverflow.com/a/6926473
     std::vector<int> random_nums;
     for (int i = 0 ; i < NUM_OF_ENTRIES ; i++) {
         random_nums.push_back(i);
     }
-    std::random_shuffle(random_nums.begin(), random_nums.end());
+    auto rd = std::random_device {}; 
+    auto rng = std::default_random_engine { rd() };
+    std::shuffle(random_nums.begin(), random_nums.end(), rng);
     
     // Insert vertices as pairs
     for (int i = 0 ; i < NUM_OF_ENTRIES ; i += 2) {
