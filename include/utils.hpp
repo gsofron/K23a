@@ -38,9 +38,9 @@ std::ostream& operator<<(std::ostream& os, const std::unordered_set<T>& uset) {
 template <typename T>
 struct CompareDistance {
     int query;  
-    Vectors<T> vectors;
+    Vectors<T>& vectors;
 
-    CompareDistance(int query, Vectors<T> vectors) : query(query), vectors(vectors) {}
+    CompareDistance(int query, Vectors<T>& vectors) : query(query), vectors(vectors) {}
 
     bool operator()(int a, int b) const {
         float distance_a = vectors.euclidean_distance(query, a);

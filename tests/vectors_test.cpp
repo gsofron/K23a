@@ -11,8 +11,8 @@
 void test_vectors_constructor(void) {
     int num_vectors;
 
-    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", num_vectors, N);
-    int vector_dimension = vectors.dimension(0);
+    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", num_vectors, N, 0);
+    int vector_dimension = 128;
 
     const float init_values[] = {
         0.00, 16.00, 35.00, 5.00, 32.00, 31.00, 14.00, 10.00, 11.00, 78.00, 
@@ -33,14 +33,16 @@ void test_vectors_constructor(void) {
 
     std::vector<float> expected_vector(init_values, init_values + vector_dimension);
 
-    TEST_CHECK(expected_vector == vectors[0]);
+    for (auto i = 0 ; i < 128 ; i++) {
+        TEST_CHECK(expected_vector[i] == vectors[0][i]);
+    }
 }
 
 void test_vectors_euclidean_distance(void) {
     int num_vectors;
     const float EPSILON = 0.001f;
 
-    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", num_vectors, N);
+    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", num_vectors, N, 0);
     
     float distance = vectors.euclidean_distance(0, 1);
 

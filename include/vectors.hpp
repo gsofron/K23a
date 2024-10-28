@@ -6,72 +6,106 @@
 #include <stdexcept>
 #include <fstream>
 #include <string>
+#include <cstring>
 
 template <typename T>
 class Vectors {
 private:
-    std::vector<std::vector<T>> vectors;  // Holds all vectors
+    T **vectors;  // Holds all vectors
     int base_size;  // Base vector count
-
+    int dimention;
+    int queries;
 public:
-    Vectors(const std::string& file_name, int& num_read_vectors, int max_vectors);
-    Vectors(int num_vectors);
+    Vectors(const std::string& file_name, int& num_read_vectors, int max_vectors, int queries_num);
+    Vectors(int num_vectors, int queries_num);
+    ~Vectors();
 
     int size() const { return base_size;}
 
-    int dimension(int index) const { return vectors[index].size(); }  // Get vector dimension
-    const std::vector<T>& operator[](int index) const { return vectors[index]; }  // Access vector at index
+    int dimension() const { return dimention;}
+
+    // int dimension(int index) const { return 128; }  // Get vector dimension
+    T* operator[](int index) const { return vectors[index]; }  // Access vector at index
 
     float euclidean_distance(int index1, int index2) const;  // Calculate distance between two vectors
 
-    bool equal(int index1, int index2) const { return vectors[index1] == vectors[index2]; }  // Check equality
-    bool equal(int index, std::vector<T> v) const { return vectors[index] == v; }
+    bool equal(int index1, int index2) const { 
+        for (auto i = 0 ; i < dimention ; i++) {
+            if (vectors[index1][i] != vectors[index2][i]) return false;
+        }
+        return true; }  // Check equality
+    bool equal(int index, T *v) const { 
+        for (auto i = 0 ; i < dimention ; i++) {
+            if (vectors[index][i] != v[i]) return false;
+        }
+        return true; }
 
     std::vector<int> query_solutions(const std::string& file_name, int query_index);  // Load query solutions
     void read_queries(const std::string& file_name, int queries_num);  // Load additional queries
-    void add_query(std::vector<T> values);  // Add a new query vector
+    void add_query(T *values);  // Add a new query vector
 };
 
 // Constructor to read vectors from file
 template <typename T>
-Vectors<T>::Vectors(const std::string& file_name, int& num_read_vectors, int max_vectors) {
+Vectors<T>::Vectors(const std::string& file_name, int& num_read_vectors, int max_vectors, int queries_num) 
+    : base_size(0), queries(queries_num){
+    
     std::ifstream file(file_name, std::ios::binary);
     if (!file) throw std::runtime_error("Error opening file: " + file_name);
 
-    vectors.resize(max_vectors);
-    base_size = max_vectors;
-    num_read_vectors = 0;
+    // Allocate memory for the array of pointers
+    vectors = new T*[max_vectors + queries_num];  
 
-    while (num_read_vectors < max_vectors && file) {
+    while (base_size < max_vectors && file) {
         int dimension;
         if (!file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) break;
 
-        std::vector<T> items(dimension);
-        if (!file.read(reinterpret_cast<char*>(items.data()), dimension * sizeof(T))) {
+        // Allocate memory for each vector
+        vectors[base_size] = new T[dimension];
+        if (!file.read(reinterpret_cast<char*>(vectors[base_size]), dimension * sizeof(T))) {
             throw std::runtime_error("Error reading vector data from file");
         }
-        vectors[num_read_vectors++] = items;
+
+        dimention = dimension;
+        ++base_size;  // Increment the number of vectors read
     }
+    num_read_vectors = base_size; // Update the number of read vectors
     file.close();
 }
 
-// Constructor to initialize with generated vectors
 template <typename T>
-Vectors<T>::Vectors(int num_vectors) {
-    vectors.resize(num_vectors);
-    base_size = num_vectors;
+Vectors<T>::Vectors(int num_vectors, int queries_num) 
+    : base_size(num_vectors), dimention(3), queries(queries_num) {
+    
+    // Allocate memory for the array of pointers with sufficient size
+    vectors = new T*[base_size + queries];  
 
     for (int i = 0; i < num_vectors; ++i) {
-        vectors[i] = { i * 3 + 1, i * 3 + 2, i * 3 + 3 };
+        vectors[i] = new T[dimention]; // Allocate memory for each vector
+        // Fill the vector with generated values
+        for (int j = 0; j < dimention; ++j) {
+            vectors[i][j] = static_cast<T>(i * 3 + (j + 1)); // Example initialization
+        }
     }
+}
+
+template <typename T>
+Vectors<T>::~Vectors() {
+    for (int i = 0; i < base_size + queries; ++i) {
+        delete[] vectors[i]; // Free each vector
+    }
+    delete[] vectors; // Free the array of pointers
 }
 
 // Calculate Euclidean distance between two vectors
 template <typename T>
 float Vectors<T>::euclidean_distance(int index1, int index2) const {
     float sum = 0.0;
-    for (size_t i = 0; i < vectors[index1].size(); i++) {
-        float diff = static_cast<float>(vectors[index1][i]) - static_cast<float>(vectors[index2][i]);
+    auto a = vectors[index1];
+    auto b = vectors[index2];
+
+    for (auto i = 0; i < dimention; i++) {
+        float diff = static_cast<float>(a[i]) - static_cast<float>(b[i]);
         sum += diff * diff;
     }
     return std::sqrt(sum);
@@ -107,25 +141,24 @@ void Vectors<T>::read_queries(const std::string& file_name, int queries_num) {
     std::ifstream file(file_name, std::ios::binary);
     if (!file) throw std::runtime_error("Error opening file: " + file_name);
 
-    vectors.resize(base_size + queries_num);
     int num_read_vectors = base_size;
 
     while (num_read_vectors < base_size + queries_num && file) {
         int dimension;
         if (!file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) break;
 
-        std::vector<T> items(dimension);
-        if (!file.read(reinterpret_cast<char*>(items.data()), dimension * sizeof(T))) {
+        vectors[num_read_vectors] = new T[dimension];
+        if (!file.read(reinterpret_cast<char*>(vectors[num_read_vectors]), dimension * sizeof(T))) {
             throw std::runtime_error("Error reading vector data from file");
         }
-        vectors[num_read_vectors++] = items;
+        num_read_vectors++;
     }
     file.close();
 }
 
-// Add a new query vector to the list
 template <typename T>
-void Vectors<T>::add_query(std::vector<T> values) {
-    vectors.resize(base_size + 1);
-    vectors[base_size++] = values;
+void Vectors<T>::add_query(T *values) {
+    // Allocate memory for a new vector at base_size and copy values into it
+    vectors[base_size] = new T[dimention];
+    std::memcpy(vectors[base_size], values, dimention * sizeof(T));  
 }
