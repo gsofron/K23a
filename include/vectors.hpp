@@ -17,6 +17,8 @@ public:
     Vectors(const std::string& file_name, int& num_read_vectors, int max_vectors);
     Vectors(int num_vectors);
 
+    int size() const { return base_size;}
+
     int dimension(int index) const { return vectors[index].size(); }  // Get vector dimension
     const std::vector<T>& operator[](int index) const { return vectors[index]; }  // Access vector at index
 
