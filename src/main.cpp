@@ -4,8 +4,8 @@
 #include <unistd.h>     // getopt()
 
 #include "directed_graph.hpp"
-#include "robust_prune.hpp"
-#include "vamana.hpp"
+// #include "robust_prune.hpp"
+// #include "vamana.hpp"
 #include "vector.hpp"
 
 // ./k23a -n 5000 -d 128 -k 5 -a 1.3 -l 5 -r 3
@@ -104,7 +104,11 @@ int main(int argc, char *argv[]) {
     std::cout << "a = " << a << std::endl;
 
     // Apply Vamana Indexing algorithm to create directed graph G with out-degree <= R
-    DirectedGraph<float> *g = vamana(vectors, a, L, R);
+    DirectedGraph *g = new DirectedGraph(total_vectors);
+    g->insert(0, 1);
+    g->insert(0, 4);
+    g->insert(0, 3);
+    g->insert(1, 7);
 
     // De-allocate memory
     delete g;

@@ -1,67 +1,74 @@
+#include <algorithm>    // std::random_shuffle
+#include <ctime>        // std::time for srand()
+#include <vector>       // std::vector
+
 #include "acutest.h"
 #include "directed_graph.hpp"
 
-#define NUM_OF_VECS 1000
-#define VECTOR_DIMENSION 5
+#define NUM_OF_ENTRIES 1000
+
+void test_directed_graph_init(void) {
+    // Check if private members initialized correctly
+    DirectedGraph *g = new DirectedGraph(NUM_OF_ENTRIES);
+    TEST_CHECK(g->get_size() == NUM_OF_ENTRIES);
+
+    // All sets should be empty
+    for (int i = 0 ; i < NUM_OF_ENTRIES ; i++) {
+        TEST_CHECK(g->get_neighbors(i).empty());
+    }
+    
+    delete g;
+}
 
 void test_directed_graph_insert(void) {
-    srand(time(NULL));
+    std::srand(unsigned(std::time(0)));
 
-    DirectedGraph<int> *g = new DirectedGraph<int>(VECTOR_DIMENSION);
+    DirectedGraph *g = new DirectedGraph(NUM_OF_ENTRIES);
 
-    // Create 6 random MathVectors
-    std::vector<MathVector <int> *> vectors;
-    for (int i = 0 ; i < NUM_OF_VECS ; i++) {
-        MathVector<int> *random_vector = DirectedGraph<int>::random_vector(VECTOR_DIMENSION);
-        vectors.push_back(random_vector);
+    // Store 0, 1, ..., NUM_OF_ENTRIES-1 to a vector and randomly shuffle them
+    std::vector<int> random_nums;
+    for (int i = 0 ; i < NUM_OF_ENTRIES ; i++) {
+        random_nums.push_back(i);
     }
+    std::random_shuffle(random_nums.begin(), random_nums.end());
+    
+    // Insert vertices as pairs
+    for (int i = 0 ; i < NUM_OF_ENTRIES ; i += 2) {
+        int j = i+1;
+        if (j == NUM_OF_ENTRIES) j = 0;
 
-    // Insert them as pairs to the graph
-    for (int i = 0 ; i < NUM_OF_VECS ; i += 2) {
-        g->insert(vectors[i], vectors[i+1]);
-        auto neighbors_umap = g->get_umap();
+        g->insert(random_nums[i], random_nums[j]);
 
-        // Check if vectors[i] was inserted as a key
-        auto it = neighbors_umap.find(vectors[i]);
-        TEST_CHECK(it != neighbors_umap.end());
-
-        // Check if vectors[i+1] was inserted as a value to the corresponding key
-        auto& neighbors_uset = neighbors_umap[vectors[i]];
-        auto it2 = neighbors_uset.find(vectors[i+1]);
-        TEST_CHECK(it2 != neighbors_uset.end());
+        // Check if j was inserted as a value to the corresponding key
+        auto& neighbors = g->get_neighbors(random_nums[i]);
+        auto it = neighbors.find(random_nums[j]);
+        TEST_CHECK(it != neighbors.end());
     }
 
     // Try adding more than one neighbor to the first vertex
-    for (int i = 2 ; i < NUM_OF_VECS ; i++) {
-        g->insert(vectors[0], vectors[i]);
-        auto neighbors_umap = g->get_umap();
+    auto& neighbors = g->get_neighbors(random_nums[0]);
+    for (int i = 2 ; i < NUM_OF_ENTRIES ; i++) {
+        g->insert(random_nums[0], random_nums[i]);
 
-        // Check if vectors[i] was inserted as a value to the corresponding key
-        auto& neighbors_uset = neighbors_umap[vectors[0]];
-        auto it = neighbors_uset.find(vectors[i]);
-        TEST_CHECK(it != neighbors_uset.end());
+        // Check if i was inserted as a value to the corresponding key
+        auto it = neighbors.find(random_nums[i]);
+        TEST_CHECK(it != neighbors.end());
     }
 
-    // Deallocate memory
-    for (int i = 0 ; i < NUM_OF_VECS ; i++) {
-        delete vectors[i];
-    }
     delete g;
 }
 
 void test_directed_graph_remove(void) {
-    srand(time(NULL));
-
-    // Create several random math-vectors and push them into a dynamic array (vector)
-    std::vector<MathVector<int> *> vecs;
-    for (int i = 0; i < NUM_OF_VECS; i++) {
-        vecs.push_back(DirectedGraph<int>::random_vector(VECTOR_DIMENSION));
+    // Create a vector of ints to use as a dataset
+    std::vector<int> vecs;
+    for (int i = 0; i < NUM_OF_ENTRIES; i++) {
+        vecs.push_back(i);
     }
 
-    // Initialize a directed graph with 3D vectors of ints
-    // Insert them in pais as follows: 0->1, 2->3, 4->5, ...
-    DirectedGraph<int> *g = new DirectedGraph<int>(VECTOR_DIMENSION);
-    for (int i = 0; i < NUM_OF_VECS; i += 2) {
+    // Initialize a directed graph
+    // Create edges as follows: 0->1, 2->3, 4->5, ...
+    DirectedGraph *g = new DirectedGraph(NUM_OF_ENTRIES);
+    for (int i = 0; i < NUM_OF_ENTRIES; i += 2) {
         g->insert(vecs[i], vecs[i+1]);
     }
 
@@ -69,20 +76,52 @@ void test_directed_graph_remove(void) {
     TEST_CHECK(!g->remove(vecs[0], vecs[4]));
     TEST_CHECK(!g->remove(vecs[1], vecs[0]));
 
-    // Remove every edge an test
-    for (int i = 0; i < NUM_OF_VECS; i += 2) {
+    // Remove every edge and test
+    for (int i = 0; i < NUM_OF_ENTRIES; i += 2) {
+        TEST_CHECK(g->get_neighbors(vecs[i]).size() == 1);
+
         TEST_CHECK(g->remove(vecs[i], vecs[i+1]));
+        TEST_CHECK(g->get_neighbors(vecs[i]).size() == 0);
+        
         TEST_CHECK(!g->remove(vecs[i], vecs[i+1])); // Try to remove non-existent edges that were previously inserted
+        TEST_CHECK(g->get_neighbors(vecs[i]).size() == 0);
     }
 
-    for (int i = 0; i < NUM_OF_VECS; i++) {
-        delete vecs[i];
+    delete g;
+}
+
+void test_directed_graph_get_neighbors(void) {
+    // Init a directed graph
+    DirectedGraph *g = new DirectedGraph(NUM_OF_ENTRIES);
+
+    // Add multiple neighbors to vertex 0
+    int neighbors_count = 0;
+    for (int i = 1; i < NUM_OF_ENTRIES; i += 2) {
+        const auto& neighbors = g->get_neighbors(0);
+
+        TEST_CHECK(neighbors.find(i) == neighbors.end()); // Neighbor shouldn't exist (yet)
+        g->insert(0, i);
+        neighbors_count++;
+        // Assure that the neighbors' set of vertex 0 increases in size and that each new neighbor-vertex is present
+        TEST_CHECK((int)neighbors.size() == neighbors_count);
+        TEST_CHECK(neighbors.find(i) != neighbors.end());
     }
+
+    // Remove a neighbor and make sure it doesn't exist in the set anymore
+    const auto& neighbors = g->get_neighbors(0);
+    int size = neighbors.size();
+    TEST_CHECK(neighbors.find(1) != neighbors.end());
+    g->remove(0, 1);
+    TEST_CHECK(neighbors.find(1) == neighbors.end());
+    TEST_CHECK((int)neighbors.size() == size - 1);
+
     delete g;
 }
 
 TEST_LIST = {
+    { "test_directed_graph_init", test_directed_graph_init },
     { "test_directed_graph_insert", test_directed_graph_insert },
     { "test_directed_graph_remove", test_directed_graph_remove },
+    { "test_directed_graph_get_neighbors", test_directed_graph_get_neighbors },
     { NULL, NULL } // Terminate test list with NULL
 };
