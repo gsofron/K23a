@@ -10,7 +10,7 @@
 #include "vamana.hpp"
 #include "vector.hpp"
 
-// ./k23a -f siftsmall/siftsmall_base.fvecs -t 1 -n 10000 -d 128 -k 5 -a 1.3 -l 5 -r 3
+// ./k23a -f siftsmall/siftsmall_base.fvecs -t 1 -n 5000 -d 128 -k 5 -a 1.3 -l 5 -r 3
 
 void parse_parameters(int argc, char *argv[], std::string &filename, int &field_type, int &total_vectors, int &vector_dimension, int &k, float &a, int &L, int &R) {
     int opt;
@@ -35,8 +35,8 @@ void parse_parameters(int argc, char *argv[], std::string &filename, int &field_
             break;
         case 't':
             field_type = atoi(optarg);
-            if (field_type < 0 || field_type > 2) {
-                std::cerr << "Invalid field type: Type 0 for unsigned char, 1 for float, 2 for int" << std::endl;
+            if (field_type < 0 || field_type > 1) {
+                std::cerr << "Invalid field type: Type 0 for unsigned char, 1 for float" << std::endl;
                 exit(EXIT_FAILURE);
             }
             break;
@@ -87,6 +87,18 @@ void parse_parameters(int argc, char *argv[], std::string &filename, int &field_
             exit(EXIT_FAILURE);
         }
     }
+
+    // k must be total_vectors-1 or less
+    if (k >= total_vectors) {
+        std::cerr << "k must be smaller than the total amount of vectors" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // In GreedySearch: L >= k
+    if (L < k) {
+        std::cerr << "L cannot be smaller than k" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -98,17 +110,6 @@ int main(int argc, char *argv[]) {
     float a;
     std::string filename;
     parse_parameters(argc, argv, filename, field_type, total_vectors, vector_dimension, k, a, L, R);
-
-    // k must be total_vectors-1 or less
-    if (k >= total_vectors) {
-        std::cerr << "k must be smaller than the total amount of vectors" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-    // In GreedySearch: L >= k
-    if (L < k) {
-        std::cerr << "L cannot be smaller than k" << std::endl;
-        exit(EXIT_FAILURE);
-    }
 
     // Read all vectors from file
     int read_vectors;
