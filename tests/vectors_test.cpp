@@ -12,7 +12,6 @@ void test_vectors_constructor(void) {
     int num_vectors;
 
     Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", num_vectors, N);
-    std::cout << "size" << sizeof(vectors) << std::endl;
     int vector_dimension = vectors.dimension(0);
 
     const float init_values[] = {
