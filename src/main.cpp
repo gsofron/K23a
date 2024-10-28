@@ -4,9 +4,10 @@
 #include <unistd.h>     // getopt()
 
 #include "directed_graph.hpp"
-// #include "robust_prune.hpp"
-// #include "vamana.hpp"
-#include "vector.hpp"
+#include "robust_prune.hpp"
+#include "utils.hpp"
+#include "vamana.hpp"
+#include "vectors.hpp"
 
 // ./k23a -n 5000 -d 128 -k 5 -a 1.3 -l 5 -r 3
 
@@ -92,7 +93,7 @@ int main(int argc, char *argv[]) {
 
     // Read all vectors from file
     int read_vectors;
-    auto *vectors = MathVector<float>::init_from_file("siftsmall/siftsmall_base.fvecs", read_vectors, total_vectors);
+    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", read_vectors, total_vectors);
 
     std::cout << "-----Parameters-----" << std::endl;
     std::cout << "Total vectors = " << total_vectors << std::endl;
@@ -103,15 +104,15 @@ int main(int argc, char *argv[]) {
     std::cout << "R = " << R << std::endl;
     std::cout << "a = " << a << std::endl;
 
-    // Apply Vamana Indexing algorithm to create directed graph G with out-degree <= R
-    DirectedGraph *g = new DirectedGraph(total_vectors);
-    g->insert(0, 1);
-    g->insert(0, 4);
-    g->insert(0, 3);
-    g->insert(1, 7);
+    // Get a random R regular graph and convert it to R-1 regular
+    DirectedGraph *g = random_graph(total_vectors, R);
+    for (int i = 0 ; i < total_vectors ; i++) {
+        CompareDistance<float> comparator(i, vectors);  
+        std::set<int, CompareDistance<float>> empty(comparator);
+        robust_prune(g, vectors, i, empty, a,  R-1);
+    }
 
     // De-allocate memory
     delete g;
-    destroy_vector(vectors);
     return 0;
 }
