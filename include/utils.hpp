@@ -4,7 +4,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "vector.hpp"
+#include "vectors.hpp"
 
 // If given condition is true exit() the program, printing given messsage
 #define ERROR_EXIT(cond, msg)                                                                           \
@@ -38,13 +38,14 @@ std::ostream& operator<<(std::ostream& os, const std::unordered_set<T>& uset) {
 //Custom comparator for vectors to a query vector
 template <typename T>
 struct CompareDistance {
-    MathVector<T>* query;  
+    int query;  
+    Vectors<T> vectors;
 
-    CompareDistance(MathVector<T> *query) : query(query) {}
+    CompareDistance(int query, Vectors<T> vectors) : query(query), vectors(vectors) {}
 
-    bool operator()(const MathVector<T> *a, const MathVector<T> *b) const {
-        float distance_a = a->euclidean_distance(*query);
-        float distance_b = b->euclidean_distance(*query);
+    bool operator()(int a, int b) const {
+        float distance_a = vectors.euclidean_distance(query, a);
+        float distance_b = vectors.euclidean_distance(query, b);
         return (distance_a < distance_b || 
                 (distance_a == distance_b && a < b));
     }
