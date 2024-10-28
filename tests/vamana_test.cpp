@@ -1,37 +1,29 @@
 #include "acutest.h"
 #include "vamana.hpp"
-#include "vector.hpp"
 
 // Used for testing
-#define NUM_OF_VECS 1000
-#define VECTOR_DIMENSION 3
+#define NUM_OF_ENTRIES 1000
 #define A 1.5f
 #define L 20
 #define R 3
 
 void test_vamana(void) {
-    srand(time(NULL));
-
-    std::vector<MathVector<int> *> vectors;
-    for (int i = 0; i < NUM_OF_VECS; i++) {
-        vectors.push_back(DirectedGraph<int>::random_vector(VECTOR_DIMENSION));
-    }
+    // Create random vectors of ints to use as a dataset
+    Vectors<int> vectors = Vectors<int>(NUM_OF_ENTRIES);
 
     // Create the Vamana graph
-    DirectedGraph<int> *g = vamana(&vectors, A, L, R);
+    DirectedGraph *g = vamana(vectors, A, L, R);
 
     // Test the out-degree of each vertex. It should be <= R
-    for (auto v : vectors) {
-        TEST_CHECK(g->get_neighbors(v).size() <= R);
+    int n = vectors.size();
+    for (int i = 0; i < n; i++) {
+        TEST_CHECK(g->get_neighbors(i).size() <= R);
     }
 
-    for (int i = 0; i < NUM_OF_VECS; i++) {
-        delete vectors[i];
-    }
     delete g;
 }
 
 TEST_LIST = {
-    {"test_vamana", test_vamana},
-    {NULL, NULL}
+    { "test_vamana", test_vamana },
+    { NULL, NULL }
 };
