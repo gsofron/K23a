@@ -9,7 +9,7 @@
 
 void test_vamana(void) {
     // Create random vectors of ints to use as a dataset
-    Vectors<int> vectors = Vectors<int>(NUM_OF_ENTRIES);
+    Vectors<int> vectors = Vectors<int>(NUM_OF_ENTRIES, 0);
 
     // Create the Vamana graph
     DirectedGraph *g = vamana(vectors, A, L, R);

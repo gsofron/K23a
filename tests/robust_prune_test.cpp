@@ -14,7 +14,7 @@ void test_robust_prune_general(void) {
     std::srand(unsigned(std::time(0)));
 
     // Get some vectors
-    auto vectors = Vectors<int>(NUM_OF_VECS);
+    auto vectors = Vectors<int>(NUM_OF_VECS, 0);
 
     // Create a random graph where each vertex points to all other vertices
     DirectedGraph *g = random_graph(NUM_OF_VECS, NUM_OF_VECS-1);
@@ -39,7 +39,7 @@ void test_robust_prune_empty_set(void) {
     std::srand(unsigned(std::time(0)));
 
     // Get some vectors
-    auto vectors = Vectors<int>(NUM_OF_VECS);
+    auto vectors = Vectors<int>(NUM_OF_VECS, 0);
 
     // Create a random graph where each vertex points to all other vertices
     DirectedGraph *g = random_graph(NUM_OF_VECS, NUM_OF_VECS-1);
@@ -83,7 +83,7 @@ void test_robust_prune_full_set(void) {
     std::srand(unsigned(std::time(0)));
 
     // Get some vectors
-    auto vectors = Vectors<int>(NUM_OF_VECS);
+    auto vectors = Vectors<int>(NUM_OF_VECS, 0);
 
     // Create a graph where each vertex points to only one random vertex
     DirectedGraph *g = random_graph(NUM_OF_VECS, 1);
@@ -96,22 +96,18 @@ void test_robust_prune_full_set(void) {
         for (int j = 0 ; j < NUM_OF_VECS ; j++) {
             s.insert(j);
         }
+        // Since s is passed by reference and is modified, create copy s2
+        std::set<int, CompareDistance<int>> s2 = s;
         
         // Even though each vertex only has one random neighbor, Robust Prune should replace it with the
         // actual nearest neighbor of the current vertex since set 's' contains all vertices
-        robust_prune(g, vectors, i, s, A, 1);
+        robust_prune(g, vectors, i, s2, A, 1);
 
         // Check if robust prune successfully returned only 1 neighbor
         const auto& neighbors = g->get_neighbors(i);
         TEST_CHECK(neighbors.size() == 1);
         int neighbor = *neighbors.begin();
-
-        // s was passed by reference in robust_prune, so rebuild it
-        s.clear();
-        for (int j = 0 ; j < NUM_OF_VECS ; j++) {
-            s.insert(j);
-        }
-
+        
         // Since s is sorted with respect to i, first point of s is 'i' with euclidean_distance(i,i) = 0.0, 
         // so the actual nearest point is the one found in the second position
         int nearest = *(++s.begin());

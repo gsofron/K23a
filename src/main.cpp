@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
 
     // Read all vectors from file
     int read_vectors;
-    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", read_vectors, total_vectors);
+    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", read_vectors, total_vectors, 0);
 
     std::cout << "-----Parameters-----" << std::endl;
     std::cout << "Total vectors = " << total_vectors << std::endl;
@@ -105,12 +105,7 @@ int main(int argc, char *argv[]) {
     std::cout << "a = " << a << std::endl;
 
     // Get a random R regular graph and convert it to R-1 regular
-    DirectedGraph *g = random_graph(total_vectors, R);
-    for (int i = 0 ; i < total_vectors ; i++) {
-        CompareDistance<float> comparator(i, vectors);  
-        std::set<int, CompareDistance<float>> empty(comparator);
-        robust_prune(g, vectors, i, empty, a,  R-1);
-    }
+    DirectedGraph *g = vamana(vectors, a, L, R);
 
     // De-allocate memory
     delete g;
