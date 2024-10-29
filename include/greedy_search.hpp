@@ -20,7 +20,7 @@ GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, in
     L_set.insert(start);  
 
     // Continue searching while there are unvisited nodes in L_set
-    while (!std::all_of(L_set.begin(), L_set.end(), [&](int node) { return visited.count(node) > 0;})) {
+    while (!L_set.empty()) {
        
         int p_star = *L_set.begin();
         L_set.erase(L_set.begin()); 
@@ -45,10 +45,6 @@ GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, in
 
     // Collect the k-nearest neighbors 
     std::vector<int> result;
-    auto it = visited.begin();
-    for (int i = 0; i < k && it != visited.end(); ++i, ++it) {
-        result.push_back(*it); 
-    }
 
     return {result, visited};
 }

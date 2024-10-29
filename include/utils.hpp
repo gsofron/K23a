@@ -43,8 +43,8 @@ struct CompareDistance {
     CompareDistance(int query, Vectors<T>& vectors) : query(query), vectors(vectors) {}
 
     bool operator()(int a, int b) const {
-        float distance_a = vectors.euclidean_distance(query, a);
-        float distance_b = vectors.euclidean_distance(query, b);
+        float distance_a = vectors.euclidean_distance_cached(query, a);
+        float distance_b = vectors.euclidean_distance_cached(query, b);
         return (distance_a < distance_b || 
                 (distance_a == distance_b && a < b));
     }

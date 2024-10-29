@@ -41,7 +41,7 @@ void robust_prune(DirectedGraph *G, Vectors<T>& vectors, int p, std::set<int, Co
             int p_prime = *it;
 
             // if a ⋅ d(p*, p') <= d(p, p') then remove p' from V
-            if (a * vectors.euclidean_distance(p_star, p_prime) <= vectors.euclidean_distance(p, p_prime)) it = V.erase(it);
+            if (a * vectors.euclidean_distance_cached(p_star, p_prime) <= vectors.euclidean_distance_cached(p, p_prime)) it = V.erase(it);
             else it++;
         }
     }

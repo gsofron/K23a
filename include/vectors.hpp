@@ -12,6 +12,7 @@ template <typename T>
 class Vectors {
 private:
     T **vectors;  // Holds all vectors
+    float **dist_matrix; // Stores calculated euclideian distances
     int base_size;  // Base vector count
     int dimention;
     int queries;
@@ -28,6 +29,10 @@ public:
     T* operator[](int index) const { return vectors[index]; }  // Access vector at index
 
     float euclidean_distance(int index1, int index2) const;  // Calculate distance between two vectors
+    
+    float euclidean_distance_cached(int index1, int index2) const { // Returns the cached euclideian distance result
+        return dist_matrix[index1][index2];
+    }
 
     bool equal(int index1, int index2) const { 
         for (auto i = 0 ; i < dimention ; i++) {
@@ -54,7 +59,10 @@ Vectors<T>::Vectors(const std::string& file_name, int& num_read_vectors, int max
     if (!file) throw std::runtime_error("Error opening file: " + file_name);
 
     // Allocate memory for the array of pointers
-    vectors = new T*[max_vectors + queries_num];  
+    vectors = new T*[max_vectors + queries_num];
+
+    // Allocate memory for the euclideian distances matrix
+    dist_matrix = new float*[max_vectors];
 
     while (base_size < max_vectors && file) {
         int dimension;
@@ -65,6 +73,8 @@ Vectors<T>::Vectors(const std::string& file_name, int& num_read_vectors, int max
         if (!file.read(reinterpret_cast<char*>(vectors[base_size]), dimension * sizeof(T))) {
             throw std::runtime_error("Error reading vector data from file");
         }
+
+        dist_matrix[base_size] = new float[max_vectors];
 
         dimention = dimension;
         ++base_size;  // Increment the number of vectors read
@@ -91,24 +101,32 @@ Vectors<T>::Vectors(int num_vectors, int queries_num)
 
 template <typename T>
 Vectors<T>::~Vectors() {
-    for (int i = 0; i < base_size + queries; ++i) {
-        delete[] vectors[i]; // Free each vector
+    for (int i = 0; i < base_size; ++i) {
+        delete[] vectors[i];
+        delete[] dist_matrix[i];
     }
-    delete[] vectors; // Free the array of pointers
+    for (int i = base_size; i < base_size + queries; i++) {
+        delete[] vectors[i];
+    }
+    delete[] vectors;
+    delete[] dist_matrix;
 }
 
 // Calculate Euclidean distance between two vectors
 template <typename T>
 float Vectors<T>::euclidean_distance(int index1, int index2) const {
-    float sum = 0.0;
-    auto a = vectors[index1];
-    auto b = vectors[index2];
+    float sum = 0.0, diff;
+    auto& a = vectors[index1];
+    auto& b = vectors[index2];
 
     for (auto i = 0; i < dimention; i++) {
-        float diff = static_cast<float>(a[i]) - static_cast<float>(b[i]);
+        diff = static_cast<float>(a[i]) - static_cast<float>(b[i]);
         sum += diff * diff;
     }
-    return std::sqrt(sum);
+    // Cache the result
+    dist_matrix[index1][index2] = dist_matrix[index2][index1] = std::sqrt(sum);
+
+    return dist_matrix[index1][index2];
 }
 
 // Load query solutions from file for a specific query index

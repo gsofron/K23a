@@ -45,8 +45,10 @@ Vertex medoid(const Vectors<T>& vectors) {
     int n = vectors.size();
     for (int i = 0; i < n; i++) {
         float sum = 0.0;
-        for (int j = 0; j < n; j++) {
-            if (i == j) continue;
+        for (int j = 0; j < i; j++) { // Cached elements; have already calculated symmetric cases
+            sum += vectors.euclidean_distance_cached(i, j);
+        }
+        for (int j = i + 1; j < n; j++) { // Calculate euclideian distances
             sum += vectors.euclidean_distance(i, j);
         }
         if (sum < min) {
