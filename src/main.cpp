@@ -1,6 +1,8 @@
 #include <cstdlib>      // srand()
 #include <ctime>        // time(NULL) for srand
+#include <fstream>      // ifstream
 #include <iostream>     // std:cerr etc.
+#include <string>       // std::string
 #include <unistd.h>     // getopt()
 
 #include "directed_graph.hpp"
@@ -9,19 +11,46 @@
 #include "vamana.hpp"
 #include "vectors.hpp"
 
-// ./k23a -n 5000 -d 128 -k 5 -a 1.3 -l 5 -r 3
+// ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -t 1 -n 5000 -d 128 -k 5 -a 1.3 -l 5 -r 3
 
-void parse_parameters(int argc, char *argv[], int &total_vectors, int &vector_dimension, int &k, float &a, int &L, int &R) {
+void parse_parameters(int argc, char *argv[], std::string &base_file, std::string &query_file, int &field_type, int &total_vectors, int &vector_dimension, int &k, float &a, int &L, int &R) {
     int opt;
+    std::ifstream file;
+
     // Make sure user gives all parameters
-    if (argc != 13) {
-        std::cerr << "Usage: " << argv[0] << " -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
+    if (argc != 19) {
+        std::cerr << "Usage: " << argv[0] << " -b <base vectors file> -q <query vectors file> -t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
     // Parse parameters
-    while ((opt = getopt(argc, argv, "n:d:k:a:l:r:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:q:t:n:d:k:a:l:r:")) != -1) {
         switch (opt) {
+        case 'b':
+            base_file = optarg;
+            file.open(base_file);
+            if (!file) {
+                std::cerr << "Base vectors file doesn't exist" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            file.close();
+            break;
+        case 'q':
+            query_file = optarg;
+            file.open(query_file);
+            if (!file) {
+                std::cerr << "Query vectors file doesn't exist" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            file.close();
+            break;
+        case 't':
+            field_type = atoi(optarg);
+            if (field_type < 0 || field_type > 1) {
+                std::cerr << "Invalid field type: Type 0 for unsigned char, 1 for float" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
         case 'n':
             total_vectors = atoi(optarg);
             if (total_vectors <= 0) {
@@ -65,9 +94,21 @@ void parse_parameters(int argc, char *argv[], int &total_vectors, int &vector_di
             }
             break;
         default:
-            std::cerr << "Usage: " << argv[0] << " -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
+            std::cerr << "Usage: " << argv[0] << " -b <base vectors file> -q <query vectors file> -t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
             exit(EXIT_FAILURE);
         }
+    }
+
+    // k must be total_vectors-1 or less
+    if (k >= total_vectors) {
+        std::cerr << "k must be smaller than the total amount of vectors" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // In GreedySearch: L >= k
+    if (L < k) {
+        std::cerr << "L cannot be smaller than k" << std::endl;
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -76,26 +117,19 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
 
     // Get command line arguements
-    int total_vectors, vector_dimension, k, L, R;
+    int total_vectors, vector_dimension, k, L, R, field_type;
     float a;
-    parse_parameters(argc, argv, total_vectors, vector_dimension, k, a, L, R);
-
-    // k must be total_vectors-1 or less
-    if (k >= total_vectors) {
-        std::cerr << "k must be smaller than the total amount of vectors" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-    // In GreedySearch: L >= k
-    if (L < k) {
-        std::cerr << "L cannot be smaller than k" << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    std::string base_file, query_file;
+    parse_parameters(argc, argv, base_file, query_file, field_type, total_vectors, vector_dimension, k, a, L, R);
 
     // Read all vectors from file
     int read_vectors;
     Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", read_vectors, total_vectors, 0);
 
     std::cout << "-----Parameters-----" << std::endl;
+    std::cout << "Base file = " << base_file << std::endl;
+    std::cout << "Query file = " << query_file << std::endl;
+    std::cout << "Field type = " << field_type << std::endl;
     std::cout << "Total vectors = " << total_vectors << std::endl;
     std::cout << "Vectors read = " << read_vectors << std::endl;
     std::cout << "Vector dimension = " << vector_dimension << std::endl;
