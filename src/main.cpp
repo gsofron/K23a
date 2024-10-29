@@ -112,6 +112,21 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
     }
 }
 
+
+std::vector<int> findDifference(const std::vector<int>& a, const std::vector<int>& b) {
+    std::unordered_set<int> setB(b.begin(), b.end()); // Load all elements of b into a set
+    std::vector<int> result;
+
+    // Add elements from a that are not in b
+    for (int num : a) {
+        if (setB.find(num) == setB.end()) {
+            result.push_back(num);
+        }
+    }
+
+    return result;
+}
+
 int main(int argc, char *argv[]) {
     // This is necessary because we use rand() inside Vamana
     srand(time(NULL));
@@ -124,7 +139,8 @@ int main(int argc, char *argv[]) {
 
     // Read all vectors from file
     int read_vectors;
-    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", read_vectors, total_vectors, 0);
+    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", read_vectors, total_vectors, 100);
+    vectors.read_queries("siftsmall/siftsmall_query.fvecs", 100);
 
     std::cout << "-----Parameters-----" << std::endl;
     std::cout << "Base file = " << base_file << std::endl;
@@ -141,6 +157,29 @@ int main(int argc, char *argv[]) {
     // Get a random R regular graph and convert it to R-1 regular
     DirectedGraph *g = vamana(vectors, a, L, R);
 
+    int sum = 0;
+    for ( int j = 0 ; j < 100 ; j++) {
+        int index = 10000 + j;
+        auto result = GreedySearch(*g, vectors, 0, index, k, L);
+        // std::cout << "result   : " << result.first << std::endl;
+        // for (auto i = 0 ; i < k ; i++) {
+        //     std::cout << vectors.euclidean_distance_cached(index, result.first[i]) << " ";
+        // }
+        // std::cout << std::endl << std::endl;
+
+        auto s = vectors.query_solutions("siftsmall/siftsmall_groundtruth.ivecs", j);
+        // std::cout << "solution : " << s << std::endl;
+        // for (auto i = 0 ; i < k ; i++) {
+        //     std::cout << vectors.euclidean_distance_cached(index, s[i]) << " ";
+        // }
+        // std::cout << std::endl << std::endl;
+
+        std::vector<int> difference = findDifference(s, result.first);
+        std::cout << "differnce : " << difference.size() << std::endl;
+        sum += difference.size();
+
+    }
+    std::cout << "sum : " << sum << std::endl;
     // De-allocate memory
     delete g;
     return 0;

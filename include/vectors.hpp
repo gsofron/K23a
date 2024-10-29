@@ -59,10 +59,10 @@ Vectors<T>::Vectors(const std::string& file_name, int& num_read_vectors, int max
     if (!file) throw std::runtime_error("Error opening file: " + file_name);
 
     // Allocate memory for the array of pointers
-    vectors = new T*[max_vectors + queries_num];
+    vectors = new T*[max_vectors + queries]; 
 
     // Allocate memory for the euclideian distances matrix
-    dist_matrix = new float*[max_vectors];
+    dist_matrix = new float*[max_vectors + queries];
 
     while (base_size < max_vectors && file) {
         int dimension;
@@ -101,12 +101,9 @@ Vectors<T>::Vectors(int num_vectors, int queries_num)
 
 template <typename T>
 Vectors<T>::~Vectors() {
-    for (int i = 0; i < base_size; ++i) {
+    for (int i = 0; i < base_size + queries; ++i) {
         delete[] vectors[i];
         delete[] dist_matrix[i];
-    }
-    for (int i = base_size; i < base_size + queries; i++) {
-        delete[] vectors[i];
     }
     delete[] vectors;
     delete[] dist_matrix;
@@ -123,8 +120,11 @@ float Vectors<T>::euclidean_distance(int index1, int index2) const {
         diff = static_cast<float>(a[i]) - static_cast<float>(b[i]);
         sum += diff * diff;
     }
+    if (index1 >= 10000 || index2 >= 10000) {
+        return sum;
+    }
     // Cache the result
-    dist_matrix[index1][index2] = dist_matrix[index2][index1] = std::sqrt(sum);
+    dist_matrix[index1][index2] = dist_matrix[index2][index1] = sum;
 
     return dist_matrix[index1][index2];
 }
@@ -166,8 +166,13 @@ void Vectors<T>::read_queries(const std::string& file_name, int queries_num) {
         if (!file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) break;
 
         vectors[num_read_vectors] = new T[dimension];
+        dist_matrix[num_read_vectors] = new float[base_size];
         if (!file.read(reinterpret_cast<char*>(vectors[num_read_vectors]), dimension * sizeof(T))) {
             throw std::runtime_error("Error reading vector data from file");
+        }
+
+        for (int i = 0 ; i < base_size ; i++) {
+            dist_matrix[num_read_vectors][i] = euclidean_distance(num_read_vectors, i);
         }
         num_read_vectors++;
     }

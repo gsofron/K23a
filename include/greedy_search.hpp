@@ -9,42 +9,44 @@
 #include "utils.hpp"
 
 template <typename T>
-std::pair<std::vector<int>, std::set<int, CompareDistance<T>>> 
+std::pair<std::vector<int>, std::set<std::pair<int, int>>> 
 GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, int k, int L) {
-    CompareDistance<T> comparator(query, vectors);  
 
-    std::set<int, CompareDistance<T>> L_set(comparator);
-
-    std::set<int, CompareDistance<T>> visited(comparator);
-    
-    L_set.insert(start);  
-
-    // Continue searching while there are unvisited nodes in L_set
-    while (!L_set.empty()) {
-       
-        int p_star = *L_set.begin();
-        L_set.erase(L_set.begin()); 
-
-        if (visited.find(p_star) != visited.end()) {
-            continue;
+    (void) k;
+    std::set<std::pair<int, int>> L_set;
+    size_t vectors_size = vectors.size();
+    bool *visited = new bool[vectors_size];
+    std::fill(visited, visited + vectors_size, false);
+    L_set.insert({vectors.euclidean_distance_cached(query, start), start});  
+  
+    while (true) {
+        auto p_star = std::find_if(L_set.begin(), L_set.end(), [&](const auto& pair) {
+            return !visited[pair.second];
+        });
+        if (p_star == L_set.end()) {
+            break;
         }
+        
+        visited[p_star->second] = true;  
 
-        visited.insert(p_star);  
-
-        auto neighbors = graph.get_neighbors(p_star);
+        auto neighbors = graph.get_neighbors(p_star->second);
         for (auto neighbor : neighbors) {
-            L_set.insert(neighbor);
+            L_set.insert({vectors.euclidean_distance_cached(query, neighbor), neighbor});
         }
 
         if (L_set.size() > static_cast<unsigned long int>(L)) {
+        
             auto it = L_set.end();
             std::advance(it, -(L_set.size() - L)); 
             L_set.erase(it, L_set.end());          
         }
     }
 
-    // Collect the k-nearest neighbors 
     std::vector<int> result;
-
-    return {result, visited};
+    auto it = L_set.begin();
+    for (int i = 0; i < k && it != L_set.end(); ++i, ++it) {
+        result.push_back(it->second); 
+    }
+    delete[] visited;
+    return {result, L_set};
 }

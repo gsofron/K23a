@@ -33,19 +33,3 @@ std::ostream& operator<<(std::ostream& os, const std::unordered_set<T>& uset) {
     os << " }";
     return os;
 }
-
-//Custom comparator for vectors to a query vector
-template <typename T>
-struct CompareDistance {
-    int query;  
-    Vectors<T>& vectors;
-
-    CompareDistance(int query, Vectors<T>& vectors) : query(query), vectors(vectors) {}
-
-    bool operator()(int a, int b) const {
-        float distance_a = vectors.euclidean_distance_cached(query, a);
-        float distance_b = vectors.euclidean_distance_cached(query, b);
-        return (distance_a < distance_b || 
-                (distance_a == distance_b && a < b));
-    }
-};
