@@ -7,8 +7,9 @@
 
 #include "directed_graph.hpp"
 #include "robust_prune.hpp"
+#include "utils.hpp"
 #include "vamana.hpp"
-#include "vector.hpp"
+#include "vectors.hpp"
 
 // ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -t 1 -n 5000 -d 128 -k 5 -a 1.3 -l 5 -r 3
 
@@ -123,7 +124,7 @@ int main(int argc, char *argv[]) {
 
     // Read all vectors from file
     int read_vectors;
-    auto *vectors = MathVector<float>::init_from_file(base_file, read_vectors, total_vectors);
+    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", read_vectors, total_vectors, 0);
 
     std::cout << "-----Parameters-----" << std::endl;
     std::cout << "Base file = " << base_file << std::endl;
@@ -137,11 +138,10 @@ int main(int argc, char *argv[]) {
     std::cout << "R = " << R << std::endl;
     std::cout << "a = " << a << std::endl;
 
-    // Apply Vamana Indexing algorithm to create directed graph G with out-degree <= R
-    DirectedGraph<float> *g = vamana(vectors, a, L, R);
+    // Get a random R regular graph and convert it to R-1 regular
+    DirectedGraph *g = vamana(vectors, a, L, R);
 
     // De-allocate memory
     delete g;
-    destroy_vector(vectors);
     return 0;
 }
