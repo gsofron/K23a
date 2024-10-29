@@ -10,28 +10,38 @@
 #include "vamana.hpp"
 #include "vector.hpp"
 
-// ./k23a -f siftsmall/siftsmall_base.fvecs -t 1 -n 5000 -d 128 -k 5 -a 1.3 -l 5 -r 3
+// ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -t 1 -n 5000 -d 128 -k 5 -a 1.3 -l 5 -r 3
 
-void parse_parameters(int argc, char *argv[], std::string &filename, int &field_type, int &total_vectors, int &vector_dimension, int &k, float &a, int &L, int &R) {
+void parse_parameters(int argc, char *argv[], std::string &base_file, std::string &query_file, int &field_type, int &total_vectors, int &vector_dimension, int &k, float &a, int &L, int &R) {
     int opt;
     std::ifstream file;
 
     // Make sure user gives all parameters
-    if (argc != 17) {
-        std::cerr << "Usage: " << argv[0] << " -f <filename> -t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
+    if (argc != 19) {
+        std::cerr << "Usage: " << argv[0] << " -b <base vectors file> -q <query vectors file> -t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
     // Parse parameters
-    while ((opt = getopt(argc, argv, "f:t:n:d:k:a:l:r:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:q:t:n:d:k:a:l:r:")) != -1) {
         switch (opt) {
-        case 'f':
-            filename = optarg;
-            file.open(filename);
+        case 'b':
+            base_file = optarg;
+            file.open(base_file);
             if (!file) {
-                std::cerr << "File doesn't exist" << std::endl;
+                std::cerr << "Base vectors file doesn't exist" << std::endl;
                 exit(EXIT_FAILURE);
             }
+            file.close();
+            break;
+        case 'q':
+            query_file = optarg;
+            file.open(query_file);
+            if (!file) {
+                std::cerr << "Query vectors file doesn't exist" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            file.close();
             break;
         case 't':
             field_type = atoi(optarg);
@@ -83,7 +93,7 @@ void parse_parameters(int argc, char *argv[], std::string &filename, int &field_
             }
             break;
         default:
-            std::cerr << "Usage: " << argv[0] << " -f <filename> -t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
+            std::cerr << "Usage: " << argv[0] << " -b <base vectors file> -q <query vectors file> -t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
             exit(EXIT_FAILURE);
         }
     }
@@ -108,15 +118,16 @@ int main(int argc, char *argv[]) {
     // Get command line arguements
     int total_vectors, vector_dimension, k, L, R, field_type;
     float a;
-    std::string filename;
-    parse_parameters(argc, argv, filename, field_type, total_vectors, vector_dimension, k, a, L, R);
+    std::string base_file, query_file;
+    parse_parameters(argc, argv, base_file, query_file, field_type, total_vectors, vector_dimension, k, a, L, R);
 
     // Read all vectors from file
     int read_vectors;
-    auto *vectors = MathVector<float>::init_from_file(filename, read_vectors, total_vectors);
+    auto *vectors = MathVector<float>::init_from_file(base_file, read_vectors, total_vectors);
 
     std::cout << "-----Parameters-----" << std::endl;
-    std::cout << "Filename = " << filename << std::endl;
+    std::cout << "Base file = " << base_file << std::endl;
+    std::cout << "Query file = " << query_file << std::endl;
     std::cout << "Field type = " << field_type << std::endl;
     std::cout << "Total vectors = " << total_vectors << std::endl;
     std::cout << "Vectors read = " << read_vectors << std::endl;
