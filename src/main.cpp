@@ -15,19 +15,19 @@
 // ~30-40 seconds
 
 void parse_parameters(int argc, char *argv[], std::string &base_file, std::string &query_file, std::string &groundtruth_file, \
-                        int &field_type, int &total_vectors, int &vector_dimension, int &k, float &a, int &L, int &R) {
+                        int &field_type, int &base_vectors, int &queries_vectors, int &vector_dimension, int &k, float &a, int &L, int &R) {
     int opt;
     std::ifstream file;
 
     // Make sure user gives all parameters
-    if (argc != 21) {
+    if (argc != 23) {
         std::cerr << "Usage: " << argv[0] << " -b <base vectors file> -q <query vectors file> -g <groundtruth vectors file>" 
-        "-t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
+        "-t <field type> -n <base vectors num> -m <queries num> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
     // Parse parameters
-    while ((opt = getopt(argc, argv, "b:q:g:t:n:d:k:a:l:r:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:q:g:t:n:m:d:k:a:l:r:")) != -1) {
         switch (opt) {
         case 'b':
             base_file = optarg;
@@ -64,9 +64,16 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
             }
             break;
         case 'n':
-            total_vectors = atoi(optarg);
-            if (total_vectors <= 0) {
+            base_vectors = atoi(optarg);
+            if (base_vectors <= 0) {
                 std::cerr << "Total vectors must be positive" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
+        case 'm':
+            queries_vectors = atoi(optarg);
+            if (queries_vectors <= 0) {
+                std::cerr << "Queries vectors must be positive" << std::endl;
                 exit(EXIT_FAILURE);
             }
             break;
@@ -112,8 +119,8 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
         }
     }
 
-    // k must be total_vectors-1 or less
-    if (k >= total_vectors) {
+    // k must be base_vectors-1 or less
+    if (k >= base_vectors) {
         std::cerr << "k must be smaller than the total amount of vectors" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -145,22 +152,23 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
 
     // Get command line arguements
-    int total_vectors, vector_dimension, k, L, R, field_type;
+    int base_vectors, queries_vectors, vector_dimension, k, L, R, field_type;
     float a;
     std::string base_file, query_file, groundtruth_file;
-    parse_parameters(argc, argv, base_file, query_file, groundtruth_file, field_type, total_vectors, vector_dimension, k, a, L, R);
+    parse_parameters(argc, argv, base_file, query_file, groundtruth_file, field_type, base_vectors, queries_vectors, vector_dimension, k, a, L, R);
 
     // Read all vectors from file
     int read_vectors;
-    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", read_vectors, total_vectors, 100);
-    vectors.read_queries("siftsmall/siftsmall_query.fvecs", 100);
+    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", read_vectors, base_vectors, queries_vectors);
+    vectors.read_queries("siftsmall/siftsmall_query.fvecs", queries_vectors);
 
     std::cout << "-----Parameters-----" << std::endl;
     std::cout << "Base file = " << base_file << std::endl;
     std::cout << "Query file = " << query_file << std::endl;
     std::cout << "Groundtruth file = " << groundtruth_file << std::endl;
     std::cout << "Field type = " << field_type << std::endl;
-    std::cout << "Total vectors = " << total_vectors << std::endl;
+    std::cout << "Base vectors = " << base_vectors << std::endl;
+    std::cout << "Queries vectors = " << queries_vectors << std::endl;
     std::cout << "Vectors read = " << read_vectors << std::endl;
     std::cout << "Vector dimension = " << vector_dimension << std::endl;
     std::cout << "k = " << k << std::endl;
@@ -171,30 +179,61 @@ int main(int argc, char *argv[]) {
     // Get a random R regular graph and convert it to R-1 regular
     DirectedGraph *g = vamana(vectors, a, L, R);
 
-    int sum = 0;
-    for ( int j = 0 ; j < 100 ; j++) {
-        int index = 10000 + j;
-        auto result = GreedySearch(*g, vectors, 0, index, k, L);
-        // std::cout << "result   : " << result.first << std::endl;
-        // for (auto i = 0 ; i < k ; i++) {
-        //     std::cout << vectors.euclidean_distance_cached(index, result.first[i]) << " ";
-        // }
-        // std::cout << std::endl << std::endl;
 
-        auto s = vectors.query_solutions(groundtruth_file, j);
-        // std::cout << "solution : " << s << std::endl;
-        // for (auto i = 0 ; i < k ; i++) {
-        //     std::cout << vectors.euclidean_distance_cached(index, s[i]) << " ";
-        // }
-        // std::cout << std::endl << std::endl;
+    int choice;
+    while (true) {
+        // Display menu
+        std::cout << "\n--- Menu ---" << std::endl;
+        std::cout << "1) Find the k-nearest neighbors of one query" << std::endl;
+        std::cout << "2) Find the k-nearest neighbors of all the queries" << std::endl;
+        std::cout << "3) Exit" << std::endl;
+        std::cout << "Enter your choice (1-3): ";
+        std::cin >> choice;
 
-        std::vector<int> difference = findDifference(s, result.first);
-        std::cout << "differnce : " << difference.size() << std::endl;
-        sum += difference.size();
+        // Process choice
+        if (choice == 1) {
+            int index;
+            std::cout << "Option 1 selected: Find the k-nearest neighbors of an index" << std::endl;
+            std::cout << "Enter the index (0," << queries_vectors-1 << "): ";
+            std::cin >> index;
 
+            if (index >= queries_vectors) {
+                std::cout << "Invalid choice. Please select a valid index." << std::endl;
+                continue;
+            }
+            // Here, add logic for finding k-nearest neighbors of the specified index
+            std::cout << "Finding the k-nearest neighbors of index " << index << "..." << std::endl;
+
+            auto result = GreedySearch(*g, vectors, 0, index + base_vectors, k, L);
+
+            auto s = vectors.query_solutions(groundtruth_file, index);
+
+            std::vector<int> difference = findDifference(s, result.first);
+            std::cout << "Recall : " << (static_cast<float>(k - difference.size()) / k) << std::endl;
+
+        } else if (choice == 2) {
+            std::cout << "Option 2 selected: Find the k-nearest neighbors" << std::endl;
+            int sum = 0;
+            for ( int j = 0 ; j < queries_vectors ; j++) {
+                int index = base_vectors + j;
+                auto result = GreedySearch(*g, vectors, 0, index, k, L);
+
+                auto s = vectors.query_solutions(groundtruth_file, j);
+
+                std::vector<int> difference = findDifference(s, result.first);
+                sum += difference.size();
+
+            }
+            std::cout << "Recall : " << (static_cast<float>((k * queries_vectors) - sum) / (k * queries_vectors)) << std::endl;
+        } else if (choice == 3) {
+            std::cout << "Exiting the program." << std::endl;
+            break; // Exit the loop
+        } else {
+            std::cout << "Invalid choice. Please select an option from 1 to 3." << std::endl;
+        }
     }
-    std::cout << "sum : " << sum << std::endl;
-    // De-allocate memory
+    
+    
     delete g;
     return 0;
 }

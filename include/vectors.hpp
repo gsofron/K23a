@@ -110,7 +110,7 @@ Vectors<T>::Vectors(int num_vectors, int queries_num)
 
     for (int i = 0; i < base_size; ++i) {
         vectors[i] = new T[dimention]; // Allocate memory for each vector
-        dist_matrix[i] = new float[base_size];
+        dist_matrix[i] = new float[base_size]();
         // Fill the vector with generated values
         for (int j = 0; j < dimention; ++j) {
             vectors[i][j] = static_cast<T>(i * 3 + (j + 1)); // Example initialization
@@ -186,12 +186,6 @@ void Vectors<T>::read_queries(const std::string& file_name, int queries_num) {
 
     int num_read_vectors = base_size;
 
-    // for (int i = 0 ; i < vectors.size() ; i++) {
-    //     for (int j = 0 ; j < vectors.dimension() ; j++) {
-    //         std::cout << vectors[i][j] << " ";
-    //     }
-    //     std::cout << std::endl << std::endl;
-    // }
     while (num_read_vectors < base_size + queries_num && file) {
         int dimension;
         if (!file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) break;
@@ -218,6 +212,6 @@ void Vectors<T>::add_query(T *values) {
 
     dist_matrix[base_size] = new float[base_size];
     for (int i = 0 ; i < base_size ; i++) {
-        euclidean_distance(base_size, i);
+        dist_matrix[base_size][i] = euclidean_distance(base_size, i);
     }
 }
