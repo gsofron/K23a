@@ -11,14 +11,15 @@
 template <typename T>
 std::pair<std::vector<int>, std::set<std::pair<int, int>>> 
 GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, int k, int L) {
-
-    (void) k;
-    std::set<std::pair<int, int>> L_set;
     size_t vectors_size = vectors.size();
+
+    // Initialise sets L_set and visited(array)
+    std::set<std::pair<int, int>> L_set;
     bool *visited = new bool[vectors_size];
     std::fill(visited, visited + vectors_size, false);
     L_set.insert({vectors.euclidean_distance_cached(query, start), start});  
   
+    // Continue while there are unvisited nodes in L_set
     while (true) {
         auto p_star = std::find_if(L_set.begin(), L_set.end(), [&](const auto& pair) {
             return !visited[pair.second];

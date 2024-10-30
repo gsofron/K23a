@@ -89,9 +89,11 @@ Vectors<T>::Vectors(int num_vectors, int queries_num)
     
     // Allocate memory for the array of pointers with sufficient size
     vectors = new T*[base_size + queries];  
+    dist_matrix = new float*[base_size + queries];
 
     for (int i = 0; i < num_vectors; ++i) {
         vectors[i] = new T[dimention]; // Allocate memory for each vector
+        dist_matrix[i] = new float[base_size];
         // Fill the vector with generated values
         for (int j = 0; j < dimention; ++j) {
             vectors[i][j] = static_cast<T>(i * 3 + (j + 1)); // Example initialization
