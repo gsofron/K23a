@@ -3,7 +3,7 @@
 
 // Used for testing
 #define NUM_OF_ENTRIES 1000
-#define A 1.5f
+#define A 1.1f
 #define L 20
 #define R 3
 

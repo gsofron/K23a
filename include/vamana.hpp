@@ -38,18 +38,18 @@ DirectedGraph *random_graph(int num_of_vertices, int R) {
 
 // Returns the medoid vertex (vector index) of given dataset
 template <typename T>
-Vertex medoid(const Vectors<T>& vectors) {
+int medoid(const Vectors<T>& vectors) {
     // Simple brute-force algorithm
     float min = std::numeric_limits<float>::max();
-    Vertex m = -1;
+    int m = -1;
     int n = vectors.size();
     for (int i = 0; i < n; i++) {
         float sum = 0.0;
-        for (int j = 0; j < i; j++) { // Cached elements; have already calculated symmetric cases
-            sum += vectors.euclidean_distance_cached(i, j);
-        }
         for (int j = i + 1; j < n; j++) { // Calculate euclideian distances
             sum += vectors.euclidean_distance(i, j);
+        }
+        for (int j = 0; j < i && sum < min; j++) { // Cached elements; have already calculated symmetric cases
+            sum += vectors.euclidean_distance_cached(i, j);
         }
         if (sum < min) {
             min = sum;
@@ -62,15 +62,15 @@ Vertex medoid(const Vectors<T>& vectors) {
 // Vamana Indexing Algorithm implementation, based on provided paper
 template <typename T>
 DirectedGraph *vamana(Vectors<T>& P, float a, int L, int R) {
-    // Init the R-regular (counting out-degree only) graph
     int n = P.size();
+    // Init the R-regular (counting out-degree only) graph
     DirectedGraph *G = random_graph(n, R);
     
     // Init vectors' medoid
-    Vertex s = medoid(P);
+    int s = medoid(P);
     
     // Create the random permutation sigma (σ)
-    Vertex *sigma = new Vertex[n];
+    int *sigma = new int[n];
     for (int i = 0; i < n; i++) {
         sigma[i] = i;
     }
@@ -88,12 +88,11 @@ DirectedGraph *vamana(Vectors<T>& P, float a, int L, int R) {
         for (auto j : N_out_sigma_i) {
             const auto& N_out_j = G->get_neighbors(j);
             if ((int)N_out_j.size() + 1 > R) {
-                CompareDistance<T> comparator(j, P);
-                std::set<int, CompareDistance<T>> new_N_out_j(comparator);
+                std::set<std::pair<int, int>> new_N_out_j;
                 for (auto v : N_out_j) {
-                    new_N_out_j.insert(v);
+                    new_N_out_j.insert({P.euclidean_distance_cached(j, v), v});
                 }
-                new_N_out_j.insert(sigma[i]);
+                new_N_out_j.insert({P.euclidean_distance_cached(j, sigma[i]), sigma[i]});
                 robust_prune(G, P, j, new_N_out_j, a, R);
             } else {
                 G->insert(j, sigma[i]);
