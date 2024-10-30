@@ -11,20 +11,23 @@
 #include "vamana.hpp"
 #include "vectors.hpp"
 
-// ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -t 1 -n 5000 -d 128 -k 5 -a 1.3 -l 5 -r 3
+// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -t 1 -n 10000 -d 128 -k 100 -a 1.1 -l 150 -r 100
+// ~30-40 seconds
 
-void parse_parameters(int argc, char *argv[], std::string &base_file, std::string &query_file, int &field_type, int &total_vectors, int &vector_dimension, int &k, float &a, int &L, int &R) {
+void parse_parameters(int argc, char *argv[], std::string &base_file, std::string &query_file, std::string &groundtruth_file, \
+                        int &field_type, int &total_vectors, int &vector_dimension, int &k, float &a, int &L, int &R) {
     int opt;
     std::ifstream file;
 
     // Make sure user gives all parameters
-    if (argc != 19) {
-        std::cerr << "Usage: " << argv[0] << " -b <base vectors file> -q <query vectors file> -t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
+    if (argc != 21) {
+        std::cerr << "Usage: " << argv[0] << " -b <base vectors file> -q <query vectors file> -g <groundtruth vectors file>" 
+        "-t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
     // Parse parameters
-    while ((opt = getopt(argc, argv, "b:q:t:n:d:k:a:l:r:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:q:g:t:n:d:k:a:l:r:")) != -1) {
         switch (opt) {
         case 'b':
             base_file = optarg;
@@ -40,6 +43,15 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
             file.open(query_file);
             if (!file) {
                 std::cerr << "Query vectors file doesn't exist" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            file.close();
+            break;
+        case 'g':
+            groundtruth_file = optarg;
+            file.open(groundtruth_file);
+            if (!file) {
+                std::cerr << "Groundtruth vectors file doesn't exist" << std::endl;
                 exit(EXIT_FAILURE);
             }
             file.close();
@@ -94,7 +106,8 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
             }
             break;
         default:
-            std::cerr << "Usage: " << argv[0] << " -b <base vectors file> -q <query vectors file> -t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
+            std::cerr << "Usage: " << argv[0] << " -b <base vectors file> -q <query vectors file> -g <groundtruth vectors file>" 
+            "-t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
             exit(EXIT_FAILURE);
         }
     }
@@ -134,8 +147,8 @@ int main(int argc, char *argv[]) {
     // Get command line arguements
     int total_vectors, vector_dimension, k, L, R, field_type;
     float a;
-    std::string base_file, query_file;
-    parse_parameters(argc, argv, base_file, query_file, field_type, total_vectors, vector_dimension, k, a, L, R);
+    std::string base_file, query_file, groundtruth_file;
+    parse_parameters(argc, argv, base_file, query_file, groundtruth_file, field_type, total_vectors, vector_dimension, k, a, L, R);
 
     // Read all vectors from file
     int read_vectors;
@@ -145,6 +158,7 @@ int main(int argc, char *argv[]) {
     std::cout << "-----Parameters-----" << std::endl;
     std::cout << "Base file = " << base_file << std::endl;
     std::cout << "Query file = " << query_file << std::endl;
+    std::cout << "Groundtruth file = " << groundtruth_file << std::endl;
     std::cout << "Field type = " << field_type << std::endl;
     std::cout << "Total vectors = " << total_vectors << std::endl;
     std::cout << "Vectors read = " << read_vectors << std::endl;
@@ -167,7 +181,7 @@ int main(int argc, char *argv[]) {
         // }
         // std::cout << std::endl << std::endl;
 
-        auto s = vectors.query_solutions("siftsmall/siftsmall_groundtruth.ivecs", j);
+        auto s = vectors.query_solutions(groundtruth_file, j);
         // std::cout << "solution : " << s << std::endl;
         // for (auto i = 0 ; i < k ; i++) {
         //     std::cout << vectors.euclidean_distance_cached(index, s[i]) << " ";
