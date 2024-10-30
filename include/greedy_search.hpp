@@ -9,12 +9,12 @@
 #include "utils.hpp"
 
 template <typename T>
-std::pair<std::vector<int>, std::set<std::pair<int, int>>> 
+std::pair<std::vector<int>, std::set<std::pair<float, int>>> 
 GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, int k, int L) {
     size_t vectors_size = vectors.size();
 
     // Initialise sets L_set and visited(array)
-    std::set<std::pair<int, int>> L_set;
+    std::set<std::pair<float, int>> L_set;
     bool *visited = new bool[vectors_size];
     std::fill(visited, visited + vectors_size, false);
     L_set.insert({vectors.euclidean_distance_cached(query, start), start});  

@@ -39,14 +39,9 @@ void test_vectors_constructor(void) {
 }
 
 void test_vectors_euclidean_distance(void) {
-    int num_vectors;
-    const float EPSILON = 0.001f;
+    Vectors<float> vectors(100, 0);
 
-    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", num_vectors, N, 0);
-    
-    float distance = vectors.euclidean_distance(0, 1);
-
-    TEST_CHECK(std::fabs(distance - 368.957f) < EPSILON); 
+    TEST_CHECK(vectors.euclidean_distance(0, 1) == 27); 
 }
 
 TEST_LIST = {
@@ -54,3 +49,4 @@ TEST_LIST = {
     { "test_vectors_euclidean_distance", test_vectors_euclidean_distance },
     { NULL, NULL } 
 };
+

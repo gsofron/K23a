@@ -16,38 +16,55 @@ private:
     int base_size;  // Base vector count
     int dimention;
     int queries;
+
 public:
+    // Create vectors by a file
     Vectors(const std::string& file_name, int& num_read_vectors, int max_vectors, int queries_num);
+
+    // Create vectors in a predefined form
     Vectors(int num_vectors, int queries_num);
+
+    // Destructor
     ~Vectors();
 
     int size() const { return base_size;}
 
     int dimension() const { return dimention;}
 
-    // int dimension(int index) const { return 128; }  // Get vector dimension
     T* operator[](int index) const { return vectors[index]; }  // Access vector at index
 
-    float euclidean_distance(int index1, int index2) const;  // Calculate distance between two vectors
+    // Calculate distance between two vectors
+    float euclidean_distance(int index1, int index2) const; 
     
-    float euclidean_distance_cached(int index1, int index2) const { // Returns the cached euclideian distance result
+    // Returns the cached euclideian distance result
+    float euclidean_distance_cached(int index1, int index2) const { 
         return dist_matrix[index1][index2];
     }
 
+    // Equality of two indeces
     bool equal(int index1, int index2) const { 
         for (auto i = 0 ; i < dimention ; i++) {
             if (vectors[index1][i] != vectors[index2][i]) return false;
         }
-        return true; }  // Check equality
+        return true; 
+    }  
+
+    // Equality between index and values (for testing)
     bool equal(int index, T *v) const { 
         for (auto i = 0 ; i < dimention ; i++) {
             if (vectors[index][i] != v[i]) return false;
         }
-        return true; }
+        return true; 
+    }
 
-    std::vector<int> query_solutions(const std::string& file_name, int query_index);  // Load query solutions
-    void read_queries(const std::string& file_name, int queries_num);  // Load additional queries
-    void add_query(T *values);  // Add a new query vector
+    // Return the k-nearest neighbours of query query_index
+    std::vector<int> query_solutions(const std::string& file_name, int query_index);  
+
+    // Save queries to vectors array from file
+    void read_queries(const std::string& file_name, int queries_num); 
+
+    // Add a new query, given the queries values
+    void add_query(T *values); 
 };
 
 // Constructor to read vectors from file
@@ -74,7 +91,7 @@ Vectors<T>::Vectors(const std::string& file_name, int& num_read_vectors, int max
             throw std::runtime_error("Error reading vector data from file");
         }
 
-        dist_matrix[base_size] = new float[max_vectors];
+        dist_matrix[base_size] = new float[max_vectors]();
 
         dimention = dimension;
         ++base_size;  // Increment the number of vectors read
@@ -91,12 +108,18 @@ Vectors<T>::Vectors(int num_vectors, int queries_num)
     vectors = new T*[base_size + queries];  
     dist_matrix = new float*[base_size + queries];
 
-    for (int i = 0; i < num_vectors; ++i) {
+    for (int i = 0; i < base_size; ++i) {
         vectors[i] = new T[dimention]; // Allocate memory for each vector
         dist_matrix[i] = new float[base_size];
         // Fill the vector with generated values
         for (int j = 0; j < dimention; ++j) {
             vectors[i][j] = static_cast<T>(i * 3 + (j + 1)); // Example initialization
+        }
+    }
+
+    for (int i = 0; i < base_size; ++i) {
+        for (int j = i + 1; j < base_size; ++j) {
+            euclidean_distance(i, j);
         }
     }
 }
@@ -122,7 +145,7 @@ float Vectors<T>::euclidean_distance(int index1, int index2) const {
         diff = static_cast<float>(a[i]) - static_cast<float>(b[i]);
         sum += diff * diff;
     }
-    if (index1 >= 10000 || index2 >= 10000) {
+    if (index1 >= base_size || index2 >= base_size) {
         return sum;
     }
     // Cache the result
@@ -163,12 +186,18 @@ void Vectors<T>::read_queries(const std::string& file_name, int queries_num) {
 
     int num_read_vectors = base_size;
 
+    // for (int i = 0 ; i < vectors.size() ; i++) {
+    //     for (int j = 0 ; j < vectors.dimension() ; j++) {
+    //         std::cout << vectors[i][j] << " ";
+    //     }
+    //     std::cout << std::endl << std::endl;
+    // }
     while (num_read_vectors < base_size + queries_num && file) {
         int dimension;
         if (!file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) break;
 
         vectors[num_read_vectors] = new T[dimension];
-        dist_matrix[num_read_vectors] = new float[base_size];
+        dist_matrix[num_read_vectors] = new float[base_size]();
         if (!file.read(reinterpret_cast<char*>(vectors[num_read_vectors]), dimension * sizeof(T))) {
             throw std::runtime_error("Error reading vector data from file");
         }
@@ -186,4 +215,9 @@ void Vectors<T>::add_query(T *values) {
     // Allocate memory for a new vector at base_size and copy values into it
     vectors[base_size] = new T[dimention];
     std::memcpy(vectors[base_size], values, dimention * sizeof(T));  
+
+    dist_matrix[base_size] = new float[base_size];
+    for (int i = 0 ; i < base_size ; i++) {
+        euclidean_distance(base_size, i);
+    }
 }

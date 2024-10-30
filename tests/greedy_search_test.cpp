@@ -17,31 +17,27 @@ DirectedGraph create_graph(int num) {
 }
 
 void test_greedy_search(void) {
-    auto vectors = Vectors<int>(10000, 1); 
-    auto graph = create_graph(10000);
+    auto vectors = Vectors<int>(1000, 1); 
+    auto graph = create_graph(1000);
 
-    // int* query_values = new int[3];
-    // query_values[0] = 9000;
-    // query_values[1] = 8000;
-    // query_values[2] = 7000;
-    // vectors.add_query(query_values);
-    // // Create more query arrays
-    // int s1[] = {7999, 8000, 8001};
-    // int s2[] = {7996, 7997, 7998};
-    // int s3[] = {8002, 8003, 8004};
-    // int s4[] = {7993, 7994, 7995};
-    // int s5[] = {8005, 8006, 8007};
+    int query_values[] = {3000, 2000, 1000};
+    vectors.add_query(query_values);
+  
+    int s1[] = {1999, 2000, 2001};
+    int s2[] = {1996, 1997, 1998};
+    int s3[] = {2002, 2003, 2004};
+    int s4[] = {1993, 1994, 1995};
+    int s5[] = {2005, 2006, 2007};
     
     int k = 5; 
-    unsigned long L = 10000; 
-    auto result = GreedySearch(graph, vectors, 0, 2666, k, L);
-    // TEST_CHECK(vectors.equal(result.first[0], s1));
-    // TEST_CHECK(vectors.equal(result.first[1], s2));
-    // TEST_CHECK(vectors.equal(result.first[2], s3));
-    // TEST_CHECK(vectors.equal(result.first[3], s4));
-    // TEST_CHECK(vectors.equal(result.first[4], s5));
-
-    // delete[] query_values;
+    unsigned long L = 500; 
+    auto result = GreedySearch(graph, vectors, 0, 1000, k, L);
+   
+    TEST_CHECK(vectors.equal(result.first[0], s1));
+    TEST_CHECK(vectors.equal(result.first[1], s2));
+    TEST_CHECK(vectors.equal(result.first[2], s3));
+    TEST_CHECK(vectors.equal(result.first[3], s4));
+    TEST_CHECK(vectors.equal(result.first[4], s5));
 }
 
 TEST_LIST = {
