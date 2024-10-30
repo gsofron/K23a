@@ -3,51 +3,51 @@
 #include <set>
 #include <unordered_set>
 #include <vector>
-#include "vector.hpp"        
+#include <algorithm>
+#include "vectors.hpp"        
 #include "directed_graph.hpp"  
 #include "utils.hpp"
 
 template <typename T>
-std::pair<std::vector<MathVector<T>*>, std::set<MathVector<T>*, CompareDistance<T>>> 
-GreedySearch(DirectedGraph<T>& graph, MathVector<T> *start, MathVector<T> *query, int k, int L) {
-    CompareDistance<T> comparator(query);  
+std::pair<std::vector<int>, std::set<std::pair<int, int>>> 
+GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, int k, int L) {
+    size_t vectors_size = vectors.size();
 
-    std::set<MathVector<T>*, CompareDistance<T>> L_set(comparator);
-
-    std::set<MathVector<T>*, CompareDistance<T>> visited(comparator);
-    
-    L_set.insert(start);  
-
-    // Continue searching while there are unvisited nodes in L_set
-    while (!std::all_of(L_set.begin(), L_set.end(), [&](MathVector<T> *node) { return visited.count(node); })) {
-       
-        MathVector<T> *p_star = *L_set.begin();
-        L_set.erase(L_set.begin()); 
-
-        if (visited.find(p_star) != visited.end()) {
-            continue;
+    // Initialise sets L_set and visited(array)
+    std::set<std::pair<int, int>> L_set;
+    bool *visited = new bool[vectors_size];
+    std::fill(visited, visited + vectors_size, false);
+    L_set.insert({vectors.euclidean_distance_cached(query, start), start});  
+  
+    // Continue while there are unvisited nodes in L_set
+    while (true) {
+        auto p_star = std::find_if(L_set.begin(), L_set.end(), [&](const auto& pair) {
+            return !visited[pair.second];
+        });
+        if (p_star == L_set.end()) {
+            break;
         }
+        
+        visited[p_star->second] = true;  
 
-        visited.insert(p_star);  
-
-        auto neighbors = graph.get_neighbors(p_star);
+        auto neighbors = graph.get_neighbors(p_star->second);
         for (auto neighbor : neighbors) {
-            L_set.insert(neighbor);
+            L_set.insert({vectors.euclidean_distance_cached(query, neighbor), neighbor});
         }
 
         if (L_set.size() > static_cast<unsigned long int>(L)) {
+        
             auto it = L_set.end();
             std::advance(it, -(L_set.size() - L)); 
             L_set.erase(it, L_set.end());          
         }
     }
 
-    // Collect the k-nearest neighbors 
-    std::vector<MathVector<T>*> result;
-    auto it = visited.begin();
-    for (int i = 0; i < k && it != visited.end(); ++i, ++it) {
-        result.push_back(*it); 
+    std::vector<int> result;
+    auto it = L_set.begin();
+    for (int i = 0; i < k && it != L_set.end(); ++i, ++it) {
+        result.push_back(it->second); 
     }
-
-    return {result, visited};
+    delete[] visited;
+    return {result, L_set};
 }
