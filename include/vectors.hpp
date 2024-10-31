@@ -11,109 +11,91 @@
 template <typename T>
 class Vectors {
 private:
-    T **vectors;  // Holds all vectors
-    float **dist_matrix; // Stores calculated euclideian distances
-    int base_size;  // Base vector count
-    int dimention;
-    int queries;
+    T **vectors;                // Stores all vectors
+    float **dist_matrix;        // Cache for Euclidean distances
+    int base_size;              // Number of vectors
+    int dimention;              // Dimension of each vector
+    int queries;                // Number of queries
 
 public:
-    // Create vectors by a file
+    // Load vectors from a file
     Vectors(const std::string& file_name, int& num_read_vectors, int max_vectors, int queries_num);
 
-    // Create vectors in a predefined form
+    // Initialize vectors with predefined values
     Vectors(int num_vectors, int queries_num);
 
-    // Destructor
-    ~Vectors();
+    ~Vectors(); // Destructor to clean up allocated memory
 
-    int size() const { return base_size;}
+    int size() const { return base_size; }
+    int dimension() const { return dimention; }
+    T* operator[](int index) const { return vectors[index]; }
 
-    int dimension() const { return dimention;}
+    // Calculate Euclidean distance between two vectors
+    float euclidean_distance(int index1, int index2) const;
 
-    T* operator[](int index) const { return vectors[index]; }  // Access vector at index
-
-    // Calculate distance between two vectors
-    float euclidean_distance(int index1, int index2) const; 
-    
-    // Returns the cached euclideian distance result
+    // Retrieve cached Euclidean distance
     float euclidean_distance_cached(int index1, int index2) const { 
         return dist_matrix[index1][index2];
     }
 
-    // Equality of two indeces
-    bool equal(int index1, int index2) const { 
-        for (auto i = 0 ; i < dimention ; i++) {
-            if (vectors[index1][i] != vectors[index2][i]) return false;
-        }
-        return true; 
-    }  
+    // Check equality between two vectors by index
+    bool equal(int index1, int index2) const; 
 
-    // Equality between index and values (for testing)
-    bool equal(int index, T *v) const { 
-        for (auto i = 0 ; i < dimention ; i++) {
-            if (vectors[index][i] != v[i]) return false;
-        }
-        return true; 
-    }
+    // Check equality between vector and values
+    bool equal(int index, T *v) const; 
 
-    // Return the k-nearest neighbours of query query_index
+    // Get k-nearest neighbors for a query
     std::vector<int> query_solutions(const std::string& file_name, int query_index);  
 
-    // Save queries to vectors array from file
+    // Load queries from a file
     void read_queries(const std::string& file_name, int queries_num); 
 
-    // Add a new query, given the queries values
+    // Add a new query vector
     void add_query(T *values); 
 };
 
-// Constructor to read vectors from file
+// Load vectors from a binary file and initialize cache
 template <typename T>
 Vectors<T>::Vectors(const std::string& file_name, int& num_read_vectors, int max_vectors, int queries_num) 
-    : base_size(0), queries(queries_num){
+    : base_size(0), queries(queries_num) {
     
     std::ifstream file(file_name, std::ios::binary);
     if (!file) throw std::runtime_error("Error opening file: " + file_name);
 
-    // Allocate memory for the array of pointers
-    vectors = new T*[max_vectors + queries]; 
-
-    // Allocate memory for the euclideian distances matrix
+    vectors = new T*[max_vectors + queries];
     dist_matrix = new float*[max_vectors + queries];
 
     while (base_size < max_vectors && file) {
         int dimension;
         if (!file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) break;
 
-        // Allocate memory for each vector
         vectors[base_size] = new T[dimension];
         if (!file.read(reinterpret_cast<char*>(vectors[base_size]), dimension * sizeof(T))) {
             throw std::runtime_error("Error reading vector data from file");
         }
 
         dist_matrix[base_size] = new float[max_vectors]();
-
         dimention = dimension;
-        ++base_size;  // Increment the number of vectors read
+        ++base_size;
     }
-    num_read_vectors = base_size; // Update the number of read vectors
+    num_read_vectors = base_size;
     file.close();
 }
 
+// Initialize vectors with generated values and fill cache
 template <typename T>
 Vectors<T>::Vectors(int num_vectors, int queries_num) 
     : base_size(num_vectors), dimention(3), queries(queries_num) {
     
-    // Allocate memory for the array of pointers with sufficient size
-    vectors = new T*[base_size + queries];  
+    vectors = new T*[base_size + queries];
     dist_matrix = new float*[base_size + queries];
 
     for (int i = 0; i < base_size; ++i) {
-        vectors[i] = new T[dimention]; // Allocate memory for each vector
+        vectors[i] = new T[dimention];
         dist_matrix[i] = new float[base_size]();
-        // Fill the vector with generated values
+
         for (int j = 0; j < dimention; ++j) {
-            vectors[i][j] = static_cast<T>(i * 3 + (j + 1)); // Example initialization
+            vectors[i][j] = static_cast<T>(i * 3 + (j + 1)); 
         }
     }
 
@@ -124,6 +106,7 @@ Vectors<T>::Vectors(int num_vectors, int queries_num)
     }
 }
 
+// Destructor to free allocated memory
 template <typename T>
 Vectors<T>::~Vectors() {
     for (int i = 0; i < base_size + queries; ++i) {
@@ -134,7 +117,7 @@ Vectors<T>::~Vectors() {
     delete[] dist_matrix;
 }
 
-// Calculate Euclidean distance between two vectors
+// Calculate Euclidean distance and update cache
 template <typename T>
 float Vectors<T>::euclidean_distance(int index1, int index2) const {
     float sum = 0.0, diff;
@@ -145,16 +128,32 @@ float Vectors<T>::euclidean_distance(int index1, int index2) const {
         diff = static_cast<float>(a[i]) - static_cast<float>(b[i]);
         sum += diff * diff;
     }
-    if (index1 >= base_size || index2 >= base_size) {
-        return sum;
-    }
-    // Cache the result
+
+    if (index1 >= base_size || index2 >= base_size) return sum;
     dist_matrix[index1][index2] = dist_matrix[index2][index1] = sum;
 
     return dist_matrix[index1][index2];
 }
 
-// Load query solutions from file for a specific query index
+// Check equality of two vectors by index
+template <typename T>
+bool Vectors<T>::equal(int index1, int index2) const { 
+    for (auto i = 0 ; i < dimention ; i++) {
+        if (vectors[index1][i] != vectors[index2][i]) return false;
+    }
+    return true; 
+}  
+
+// Check equality of a vector with specific values
+template <typename T>
+bool Vectors<T>::equal(int index, T *v) const { 
+    for (auto i = 0 ; i < dimention ; i++) {
+        if (vectors[index][i] != v[i]) return false;
+    }
+    return true; 
+}
+
+// Load k-nearest neighbors for a query from file
 template <typename T>
 std::vector<int> Vectors<T>::query_solutions(const std::string& file_name, int query_index) {
     std::ifstream file(file_name, std::ios::binary);
@@ -165,10 +164,9 @@ std::vector<int> Vectors<T>::query_solutions(const std::string& file_name, int q
         throw std::runtime_error("Error reading vector dimension from file.");
     }
 
-    // Calculate the start byte for the desired query
     long start_byte = (query_index * ((dimension + 1) * sizeof(int))) + sizeof(int);
     file.seekg(start_byte, std::ios::beg);
-    if (!file) throw std::runtime_error("Error seeking to the required byte position.");
+    if (!file) throw std::runtime_error("Error seeking to required byte position.");
 
     std::vector<int> solution_indices(dimension);
     if (!file.read(reinterpret_cast<char*>(solution_indices.data()), dimension * sizeof(int))) {
@@ -178,7 +176,7 @@ std::vector<int> Vectors<T>::query_solutions(const std::string& file_name, int q
     return solution_indices;
 }
 
-// Load additional queries from a file
+// Load multiple query vectors from a file
 template <typename T>
 void Vectors<T>::read_queries(const std::string& file_name, int queries_num) {
     std::ifstream file(file_name, std::ios::binary);
@@ -204,14 +202,14 @@ void Vectors<T>::read_queries(const std::string& file_name, int queries_num) {
     file.close();
 }
 
+// Add a single query vector and update distance cache
 template <typename T>
 void Vectors<T>::add_query(T *values) {
-    // Allocate memory for a new vector at base_size and copy values into it
     vectors[base_size] = new T[dimention];
-    std::memcpy(vectors[base_size], values, dimention * sizeof(T));  
+    std::memcpy(vectors[base_size], values, dimention * sizeof(T));
 
     dist_matrix[base_size] = new float[base_size];
     for (int i = 0 ; i < base_size ; i++) {
         dist_matrix[base_size][i] = euclidean_distance(base_size, i);
     }
-}
+} 
