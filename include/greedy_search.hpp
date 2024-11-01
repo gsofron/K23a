@@ -24,15 +24,11 @@ GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, in
     // Main search loop
     while (true) {
         // Find first unvisited node in L_set
-        auto end_it = L_set.begin();
-        std::advance(end_it, std::min(L, static_cast<int>(L_set.size())));
-
-        auto p_star = std::find_if(L_set.begin(), end_it, [&](const auto& pair) {
+        auto p_star = std::find_if(L_set.begin(), L_set.end(), [&](const auto& pair) {
             return !visited[pair.second];
         });
-
-        if (p_star == end_it) {
-            break; // Exit if all nodes in the first L elements have been visited
+        if (p_star == L_set.end()) {
+            break; // Exit if all nodes in L_set have been visited
         }
         
         visited[p_star->second] = true;
@@ -42,8 +38,20 @@ GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, in
         for (auto neighbor : neighbors) {
             L_set.insert({vectors.euclidean_distance_cached(query, neighbor), neighbor});
         }
+
+        // Restrict L_set to a maximum size of L
+        if (L_set.size() > static_cast<unsigned long int>(L)) {
+            auto it = L_set.end();
+            std::advance(it, -(L_set.size() - L));
+            L_set.erase(it, L_set.end());
+        }
     }
 
+    for (size_t i = 0; i < vectors_size; ++i) {
+        if (visited[i]) {
+            L_set.insert({vectors.euclidean_distance_cached(query, i), i});
+        }
+    }
     // Collect top k results
     std::vector<int> result;
     auto it = L_set.begin();
