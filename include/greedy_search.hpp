@@ -33,7 +33,7 @@ GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, in
         
         visited[p_star->second] = true;
 
-        // Insert unvisited neighbors with distances
+        // Insert neighbors with distances
         auto neighbors = graph.get_neighbors(p_star->second);
         for (auto neighbor : neighbors) {
             L_set.insert({vectors.euclidean_distance_cached(query, neighbor), neighbor});
@@ -47,7 +47,7 @@ GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, in
         }
     }
 
-    for (size_t i = 0; i < vectors_size; ++i) {
+    for (size_t i = 0; i < vectors_size; i++) {
         if (visited[i]) {
             L_set.insert({vectors.euclidean_distance_cached(query, i), i});
         }
@@ -55,7 +55,7 @@ GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, in
     // Collect top k results
     std::vector<int> result;
     auto it = L_set.begin();
-    for (int i = 0; i < k && it != L_set.end(); ++i, ++it) {
+    for (int i = 0; i < k && it != L_set.end(); i++, it++) {
         result.push_back(it->second);
     }
 

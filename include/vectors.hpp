@@ -76,7 +76,7 @@ Vectors<T>::Vectors(const std::string& file_name, int& num_read_vectors, int max
 
         dist_matrix[base_size] = new float[max_vectors]();
         dimention = dimension;
-        ++base_size;
+        base_size++;
     }
     num_read_vectors = base_size;
     file.close();
@@ -90,17 +90,17 @@ Vectors<T>::Vectors(int num_vectors, int queries_num)
     vectors = new T*[base_size + queries];
     dist_matrix = new float*[base_size + queries];
 
-    for (int i = 0; i < base_size; ++i) {
+    for (int i = 0; i < base_size; i++) {
         vectors[i] = new T[dimention];
         dist_matrix[i] = new float[base_size]();
 
-        for (int j = 0; j < dimention; ++j) {
+        for (int j = 0; j < dimention; j++) {
             vectors[i][j] = static_cast<T>(i * 3 + (j + 1)); 
         }
     }
 
-    for (int i = 0; i < base_size; ++i) {
-        for (int j = i + 1; j < base_size; ++j) {
+    for (int i = 0; i < base_size; i++) {
+        for (int j = i + 1; j < base_size; j++) {
             euclidean_distance(i, j);
         }
     }
