@@ -1,9 +1,9 @@
-#include <cstdlib>      // srand()
-#include <ctime>        // time(NULL) for srand
-#include <fstream>      // ifstream
-#include <iostream>     // std:cerr etc.
-#include <string>       // std::string
-#include <unistd.h>     // getopt()
+#include <cstdlib>      // For srand() randomization
+#include <ctime>        // For time(NULL) seed
+#include <fstream>      // For ifstream to read files
+#include <iostream>     // For std::cerr, std::cout
+#include <string>       // For std::string management
+#include <unistd.h>     // For getopt() command-line argument parsing
 
 #include "directed_graph.hpp"
 #include "robust_prune.hpp"
@@ -11,142 +11,147 @@
 #include "vamana.hpp"
 #include "vectors.hpp"
 
-// ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -t 1 -n 5000 -d 128 -k 5 -a 1.3 -l 5 -r 3
+// Command line: ./k23a -b <base file> -q <query file> -g <groundtruth file> -t <field type> -n <num base vectors> 
+//               -d <dim> -k <neighbors> -a <alpha> -l <L> -r <R>
 
-void parse_parameters(int argc, char *argv[], std::string &base_file, std::string &query_file, int &field_type, int &total_vectors, int &vector_dimension, int &k, float &a, int &L, int &R) {
+// Parse input arguments and load necessary parameters
+void parse_parameters(int argc, char *argv[], std::string &base_file, std::string &query_file, 
+                      std::string &groundtruth_file, int &field_type, int &base_vectors, int &queries_vectors, 
+                      int &vector_dimension, int &k, float &a, int &L, int &R) {
     int opt;
     std::ifstream file;
 
-    // Make sure user gives all parameters
-    if (argc != 19) {
-        std::cerr << "Usage: " << argv[0] << " -b <base vectors file> -q <query vectors file> -t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
+    // Require 23 arguments for full input specification
+    if (argc != 23) {
+        std::cerr << "Usage: " << argv[0] << " -b <base file> -q <query file> -g <groundtruth file> "
+                     "-t <field type> -n <num base vectors> -m <num queries> -d <dimension> "
+                     "-k <neighbors> -a <alpha> -l <L> -r <R>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
-    // Parse parameters
-    while ((opt = getopt(argc, argv, "b:q:t:n:d:k:a:l:r:")) != -1) {
+    // Parse arguments using getopt
+    while ((opt = getopt(argc, argv, "b:q:g:t:n:m:d:k:a:l:r:")) != -1) {
         switch (opt) {
-        case 'b':
+        case 'b': // Base vectors file
             base_file = optarg;
-            file.open(base_file);
-            if (!file) {
+            if (!std::ifstream(base_file)) {
                 std::cerr << "Base vectors file doesn't exist" << std::endl;
                 exit(EXIT_FAILURE);
             }
-            file.close();
             break;
-        case 'q':
+        case 'q': // Query vectors file
             query_file = optarg;
-            file.open(query_file);
-            if (!file) {
+            if (!std::ifstream(query_file)) {
                 std::cerr << "Query vectors file doesn't exist" << std::endl;
                 exit(EXIT_FAILURE);
             }
-            file.close();
             break;
-        case 't':
-            field_type = atoi(optarg);
+        case 'g': // Groundtruth vectors file
+            groundtruth_file = optarg;
+            if (!std::ifstream(groundtruth_file)) {
+                std::cerr << "Groundtruth file doesn't exist" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
+        case 't': // Field type
+            field_type = std::stoi(optarg);
             if (field_type < 0 || field_type > 1) {
-                std::cerr << "Invalid field type: Type 0 for unsigned char, 1 for float" << std::endl;
+                std::cerr << "Invalid field type: 0 for unsigned char, 1 for float" << std::endl;
                 exit(EXIT_FAILURE);
             }
             break;
-        case 'n':
-            total_vectors = atoi(optarg);
-            if (total_vectors <= 0) {
-                std::cerr << "Total vectors must be positive" << std::endl;
+        case 'n': // Base vectors count
+            base_vectors = std::stoi(optarg);
+            if (base_vectors <= 0) {
+                std::cerr << "Number of base vectors must be positive" << std::endl;
                 exit(EXIT_FAILURE);
             }
             break;
-        case 'd':
-            vector_dimension = atoi(optarg);
+        case 'm': // Query vectors count
+            queries_vectors = std::stoi(optarg);
+            if (queries_vectors <= 0) {
+                std::cerr << "Number of query vectors must be positive" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
+        case 'd': // Vector dimension
+            vector_dimension = std::stoi(optarg);
             if (vector_dimension <= 0) {
                 std::cerr << "Vector dimension must be positive" << std::endl;
                 exit(EXIT_FAILURE);
             }
             break;
-        case 'k':
-            k = atoi(optarg);
-            if (k <= 0) {
-                std::cerr << "k must be positive" << std::endl;
+        case 'k': // Number of neighbors
+            k = std::stoi(optarg);
+            if (k <= 0 || k >= base_vectors) {
+                std::cerr << "k must be positive and smaller than total base vectors" << std::endl;
                 exit(EXIT_FAILURE);
             }
             break;
-        case 'a':
-            a = atof(optarg);
+        case 'a': // Alpha value
+            a = std::stof(optarg);
             if (a < 1.0) {
-                std::cerr << "a cannot be smaller than 1" << std::endl;
+                std::cerr << "Alpha value cannot be less than 1" << std::endl;
                 exit(EXIT_FAILURE);
             }
             break;
-        case 'l':
-            L = atoi(optarg);
-            if (L <= 0) {
-                std::cerr << "L must be positive" << std::endl;
+        case 'l': // Greedy search limit L
+            L = std::stoi(optarg);
+            if (L < k) {
+                std::cerr << "L cannot be smaller than k" << std::endl;
                 exit(EXIT_FAILURE);
             }
             break;
-        case 'r':
-            R = atoi(optarg);
+        case 'r': // Graph degree limit R
+            R = std::stoi(optarg);
             if (R <= 0) {
                 std::cerr << "R must be positive" << std::endl;
                 exit(EXIT_FAILURE);
             }
             break;
         default:
-            std::cerr << "Usage: " << argv[0] << " -b <base vectors file> -q <query vectors file> -t <field type> -n <total vectors> -d <vector dimension> -k <k neighbours> -a <a> -l <L> -r <R>" << std::endl;
+            std::cerr << "Usage: " << argv[0] << " -b <base file> -q <query file> -g <groundtruth file> "
+                         "-t <field type> -n <num base vectors> -d <dimension> -k <neighbors> -a <alpha> "
+                         "-l <L> -r <R>" << std::endl;
             exit(EXIT_FAILURE);
         }
     }
-
-    // k must be total_vectors-1 or less
-    if (k >= total_vectors) {
-        std::cerr << "k must be smaller than the total amount of vectors" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    // In GreedySearch: L >= k
-    if (L < k) {
-        std::cerr << "L cannot be smaller than k" << std::endl;
-        exit(EXIT_FAILURE);
-    }
 }
 
-
+// Helper function to find elements in `a` not in `b`
 std::vector<int> findDifference(const std::vector<int>& a, const std::vector<int>& b) {
-    std::unordered_set<int> setB(b.begin(), b.end()); // Load all elements of b into a set
+    std::unordered_set<int> setB(b.begin(), b.end());
     std::vector<int> result;
 
-    // Add elements from a that are not in b
     for (int num : a) {
-        if (setB.find(num) == setB.end()) {
-            result.push_back(num);
-        }
+        if (!setB.count(num)) result.push_back(num);
     }
-
     return result;
 }
 
+// Main execution and menu
 int main(int argc, char *argv[]) {
-    // This is necessary because we use rand() inside Vamana
-    srand(time(NULL));
+    srand(time(NULL));  // Seed for randomization
 
-    // Get command line arguements
-    int total_vectors, vector_dimension, k, L, R, field_type;
+    // Initialize parameters and parse command line input
+    int base_vectors, queries_vectors, vector_dimension, k, L, R, field_type;
     float a;
-    std::string base_file, query_file;
-    parse_parameters(argc, argv, base_file, query_file, field_type, total_vectors, vector_dimension, k, a, L, R);
+    std::string base_file, query_file, groundtruth_file;
+    parse_parameters(argc, argv, base_file, query_file, groundtruth_file, field_type, base_vectors, queries_vectors, vector_dimension, k, a, L, R);
 
-    // Read all vectors from file
+    // Load vectors
     int read_vectors;
-    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", read_vectors, total_vectors, 100);
-    vectors.read_queries("siftsmall/siftsmall_query.fvecs", 100);
+    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", read_vectors, base_vectors, queries_vectors);
+    vectors.read_queries("siftsmall/siftsmall_query.fvecs", queries_vectors);
 
+    // Output parameters
     std::cout << "-----Parameters-----" << std::endl;
     std::cout << "Base file = " << base_file << std::endl;
     std::cout << "Query file = " << query_file << std::endl;
+    std::cout << "Groundtruth file = " << groundtruth_file << std::endl;
     std::cout << "Field type = " << field_type << std::endl;
-    std::cout << "Total vectors = " << total_vectors << std::endl;
+    std::cout << "Base vectors = " << base_vectors << std::endl;
+    std::cout << "Queries vectors = " << queries_vectors << std::endl;
     std::cout << "Vectors read = " << read_vectors << std::endl;
     std::cout << "Vector dimension = " << vector_dimension << std::endl;
     std::cout << "k = " << k << std::endl;
@@ -154,33 +159,46 @@ int main(int argc, char *argv[]) {
     std::cout << "R = " << R << std::endl;
     std::cout << "a = " << a << std::endl;
 
-    // Get a random R regular graph and convert it to R-1 regular
+    // Initialize and display menu options
+    std::cout << "Creating Vamana..." << std::endl;
     DirectedGraph *g = vamana(vectors, a, L, R);
 
-    int sum = 0;
-    for ( int j = 0 ; j < 100 ; j++) {
-        int index = 10000 + j;
-        auto result = GreedySearch(*g, vectors, 0, index, k, L);
-        // std::cout << "result   : " << result.first << std::endl;
-        // for (auto i = 0 ; i < k ; i++) {
-        //     std::cout << vectors.euclidean_distance_cached(index, result.first[i]) << " ";
-        // }
-        // std::cout << std::endl << std::endl;
+    int choice;
+    while (true) {
+        std::cout << "\n--- Menu ---\n1) Find k-nearest neighbors for a query\n2) Find k-nearest neighbors for all queries\n3) Exit\nEnter choice (1-3): ";
+        std::cin >> choice;
 
-        auto s = vectors.query_solutions("siftsmall/siftsmall_groundtruth.ivecs", j);
-        // std::cout << "solution : " << s << std::endl;
-        // for (auto i = 0 ; i < k ; i++) {
-        //     std::cout << vectors.euclidean_distance_cached(index, s[i]) << " ";
-        // }
-        // std::cout << std::endl << std::endl;
+        if (choice == 1) { // Single query processing
+            int index;
+            std::cout << "Enter query index (0," << queries_vectors - 1 << "): ";
+            std::cin >> index;
 
-        std::vector<int> difference = findDifference(s, result.first);
-        std::cout << "differnce : " << difference.size() << std::endl;
-        sum += difference.size();
+            if (index >= queries_vectors) {
+                std::cout << "Invalid index." << std::endl;
+                continue;
+            }
 
+            auto result = GreedySearch(*g, vectors, 0, index + base_vectors, k, L);
+            auto groundtruth = vectors.query_solutions(groundtruth_file, index);
+            std::vector<int> difference = findDifference(groundtruth, result.first);
+            std::cout << "Recall : " << (static_cast<float>(k - difference.size()) / k) << std::endl;
+
+        } else if (choice == 2) { // All queries processing
+            int mismatch_count = 0;
+            for (int j = 0; j < queries_vectors; j++) {
+                auto result = GreedySearch(*g, vectors, 0, j + base_vectors, k, L);
+                auto groundtruth = vectors.query_solutions(groundtruth_file, j);
+                mismatch_count += findDifference(groundtruth, result.first).size();
+            }
+            std::cout << "Recall : " << (static_cast<float>((k * queries_vectors) - mismatch_count) / (k * queries_vectors)) << std::endl;
+        } else if (choice == 3) { // Exit
+            std::cout << "Exiting the program." << std::endl;
+            break;
+        } else {
+            std::cout << "Invalid option." << std::endl;
+        }
     }
-    std::cout << "sum : " << sum << std::endl;
-    // De-allocate memory
+
     delete g;
     return 0;
 }

@@ -1,49 +1,52 @@
-#include "acutest.h"  
+#include "acutest.h"             // Acutest unit testing library
 #include <vector>
 #include <iostream>
-#include "vectors.hpp"         
-#include "directed_graph.hpp"  
-#include "greedy_search.hpp"
+#include "vectors.hpp"           // For Vectors class
+#include "directed_graph.hpp"     // For DirectedGraph class
+#include "greedy_search.hpp"      // For GreedySearch function
 
-
+// Creates a sample directed graph with sequential and near-sequential edges
 DirectedGraph create_graph(int num) {
     DirectedGraph graph(10000);  
 
-    for (int i = 0; i < num-2; i++) {  
-        graph.insert(i, i + 1);  
-        graph.insert(i, i + 2); 
+    for (int i = 0; i < num - 2; i++) {  
+        graph.insert(i, i + 1);  // Sequential edges
+        graph.insert(i, i + 2);  // Near-sequential edges
     }
     return graph;
 }
 
+// Tests the GreedySearch function for a specific graph structure
 void test_greedy_search(void) {
-    auto vectors = Vectors<int>(10000, 1); 
-    auto graph = create_graph(10000);
+    Vectors<int> vectors(1000, 1);  // Initialize Vectors object for testing
+    DirectedGraph graph = create_graph(1000);  // Create test graph with 1000 nodes
 
-    // int* query_values = new int[3];
-    // query_values[0] = 9000;
-    // query_values[1] = 8000;
-    // query_values[2] = 7000;
-    // vectors.add_query(query_values);
-    // // Create more query arrays
-    // int s1[] = {7999, 8000, 8001};
-    // int s2[] = {7996, 7997, 7998};
-    // int s3[] = {8002, 8003, 8004};
-    // int s4[] = {7993, 7994, 7995};
-    // int s5[] = {8005, 8006, 8007};
+    // Define a single query vector
+    int query_values[] = {3000, 2000, 1000};
+    vectors.add_query(query_values);  // Add query to vectors
+
+    // Expected nearest neighbor sequences for verification
+    int s1[] = {1999, 2000, 2001};
+    int s2[] = {1996, 1997, 1998};
+    int s3[] = {2002, 2003, 2004};
+    int s4[] = {1993, 1994, 1995};
+    int s5[] = {2005, 2006, 2007};
     
-    int k = 5; 
-    unsigned long L = 10000; 
-    auto result = GreedySearch(graph, vectors, 0, 2666, k, L);
-    // TEST_CHECK(vectors.equal(result.first[0], s1));
-    // TEST_CHECK(vectors.equal(result.first[1], s2));
-    // TEST_CHECK(vectors.equal(result.first[2], s3));
-    // TEST_CHECK(vectors.equal(result.first[3], s4));
-    // TEST_CHECK(vectors.equal(result.first[4], s5));
+    int k = 5;                    // Number of nearest neighbors to retrieve
+    unsigned long L = 500;        // Maximum allowed search steps
 
-    // delete[] query_values;
+    // Execute GreedySearch and store the result
+    auto result = GreedySearch(graph, vectors, 0, 1000, k, L);
+
+    // Check each set of results against expected neighbor sequences
+    TEST_CHECK(vectors.equal(result.first[0], s1));
+    TEST_CHECK(vectors.equal(result.first[1], s2));
+    TEST_CHECK(vectors.equal(result.first[2], s3));
+    TEST_CHECK(vectors.equal(result.first[3], s4));
+    TEST_CHECK(vectors.equal(result.first[4], s5));
 }
 
+// List of tests for the test runner
 TEST_LIST = {
     { "test_greedy_search", test_greedy_search },
     { NULL, NULL } 

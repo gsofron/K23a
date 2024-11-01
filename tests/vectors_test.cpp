@@ -1,19 +1,19 @@
-#include "acutest.h"  
-#include "vectors.hpp"
-#include <iostream>
-#include <vector>                      
+#include "acutest.h"               // Acutest testing framework
+#include "vectors.hpp"             // Vectors class for data management
+#include <vector>                  // Standard vector library
 #include <cstring>
 #include <memory>
 #include <iostream>
 
-#define N 10000
+#define N 10000                    // Maximum number of vectors
 
+// Test for Vectors constructor - checks initialization from file
 void test_vectors_constructor(void) {
     int num_vectors;
-
-    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", num_vectors, N, 0);
+    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", num_vectors, N, 0);  // Initialize Vectors from file
     int vector_dimension = 128;
 
+    // Expected values for the first vector
     const float init_values[] = {
         0.00, 16.00, 35.00, 5.00, 32.00, 31.00, 14.00, 10.00, 11.00, 78.00, 
         55.00, 10.00, 45.00, 83.00, 11.00, 6.00, 14.00, 57.00, 102.00, 
@@ -31,24 +31,24 @@ void test_vectors_constructor(void) {
         0.00, 0.00, 2.00, 8.00, 19.00, 25.00, 23.00, 1.00
     };
 
+    // Convert expected values to vector for easy comparison
     std::vector<float> expected_vector(init_values, init_values + vector_dimension);
 
-    for (auto i = 0 ; i < 128 ; i++) {
+    // Verify the first vector values in 'vectors' match expected values
+    for (int i = 0; i < vector_dimension; i++) {
         TEST_CHECK(expected_vector[i] == vectors[0][i]);
     }
 }
 
+// Test for Vectors' Euclidean distance function - checks if the result matches expectation
 void test_vectors_euclidean_distance(void) {
-    int num_vectors;
-    const float EPSILON = 0.001f;
+    Vectors<float> vectors(100, 0);  // Create Vectors object with 100 vectors, no initialization from file
 
-    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", num_vectors, N, 0);
-    
-    float distance = vectors.euclidean_distance(0, 1);
-
-    TEST_CHECK(std::fabs(distance - 368.957f) < EPSILON); 
+    // Check that the Euclidean distance between vector 0 and vector 1 is as expected
+    TEST_CHECK(vectors.euclidean_distance(0, 1) == 27); 
 }
 
+// List of test functions for the test runner
 TEST_LIST = {
     { "test_vectors_constructor", test_vectors_constructor },
     { "test_vectors_euclidean_distance", test_vectors_euclidean_distance },

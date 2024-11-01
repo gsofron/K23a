@@ -88,7 +88,7 @@ DirectedGraph *vamana(Vectors<T>& P, float a, int L, int R) {
         for (auto j : N_out_sigma_i) {
             const auto& N_out_j = G->get_neighbors(j);
             if ((int)N_out_j.size() + 1 > R) {
-                std::set<std::pair<int, int>> new_N_out_j;
+                std::set<std::pair<float, int>> new_N_out_j;
                 for (auto v : N_out_j) {
                     new_N_out_j.insert({P.euclidean_distance_cached(j, v), v});
                 }
