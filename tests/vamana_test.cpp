@@ -7,6 +7,22 @@
 #define L 20
 #define R 3
 
+void test_medoid(void) {
+    /* The testing-constructor of the Vectors class creates vectors using
+       the following deterministic formula: vectors[i][j] = i * 3 + j + 1,
+       where the i-th row contains the vector of (const) dimesion d=3
+       and j is the corresponding value in each dimension */
+    Vectors<int> vectors = Vectors<int>(5, 0);
+    /* Having created 5 vectors, their values are:
+       vectors[0] = [1, 2, 3], vectors[1] = [4, 5, 6], vectors[2] = [7, 8, 9],
+       vectors[3] = [10, 11, 12] and vectors[4] = [13, 14, 15] */
+
+    // It is clear that the medoid point (vector) is vectors[2]
+
+    // Assure that the medoid() function finds the medoid point
+    TEST_CHECK(medoid(vectors) == 2);
+}
+
 void test_vamana(void) {
     // Create random vectors of ints to use as a dataset
     Vectors<int> vectors = Vectors<int>(NUM_OF_ENTRIES, 0);
@@ -60,6 +76,7 @@ void test_read_and_write_file(void) {
 }
 
 TEST_LIST = {
+    { "test_medoid", test_medoid },
     { "test_vamana", test_vamana },
     { "test_read_and_write_file", test_read_and_write_file },
     { NULL, NULL }
