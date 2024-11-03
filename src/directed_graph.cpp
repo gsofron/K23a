@@ -27,6 +27,8 @@ void DirectedGraph::insert(Vertex source, Vertex destination) {
     neighbors[source].insert(destination);
 }
 
+// Remove edge ('source', 'destination') from graph if present
+// Returns true/false based on the removal's success
 bool DirectedGraph::remove(Vertex source, Vertex destination) {
     ERROR_EXIT(source < 0 || source >= neighbors_size, "Invalid index (vertex)")
     ERROR_EXIT(destination < 0 || destination >= neighbors_size, "Invalid index (vertex)")
@@ -35,6 +37,7 @@ bool DirectedGraph::remove(Vertex source, Vertex destination) {
     return neighbors[source].erase(destination) > 0;
 }
 
+// Returns a reference to an unordered-set that contains the neighbors of vertex 'v'. 'const' is used to prevent data modification
 const std::unordered_set<Vertex>& DirectedGraph::get_neighbors(Vertex v) const {
     ERROR_EXIT(v < 0 || v >= neighbors_size, "Invalid index (vertex)")
     return neighbors[v];

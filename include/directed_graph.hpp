@@ -13,13 +13,14 @@ public:
     // Create a directed graph with 'num_of_vertices' number of vertices
     DirectedGraph(int num_of_vertices);
 
-    //De-allocate memory
+    // De-allocate memory
     ~DirectedGraph();
 
     // Insert edge ('source', 'destination') to graph
     void insert(Vertex source, Vertex destination);
 
     // Remove edge ('source', 'destination') from graph if present
+    // Returns true/false based on the removal's success
     bool remove(Vertex source, Vertex destination);
 
     // Returns a reference to an unordered-set that contains the neighbors of vertex 'v'. 'const' is used to prevent data modification
