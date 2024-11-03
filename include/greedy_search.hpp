@@ -47,16 +47,18 @@ GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, in
         }
     }
 
-    for (size_t i = 0; i < vectors_size; i++) {
-        if (visited[i]) {
-            L_set.insert({vectors.euclidean_distance_cached(query, i), i});
-        }
-    }
     // Collect top k results
     std::vector<int> result;
     auto it = L_set.begin();
     for (int i = 0; i < k && it != L_set.end(); i++, it++) {
         result.push_back(it->second);
+    }
+
+    // Add the deleted visited indeces to L_set
+    for (size_t i = 0; i < vectors_size; i++) {
+        if (visited[i]) {
+            L_set.insert({vectors.euclidean_distance_cached(query, i), i});
+        }
     }
 
     delete[] visited;

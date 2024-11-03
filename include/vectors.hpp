@@ -38,12 +38,6 @@ public:
         return dist_matrix[index1][index2];
     }
 
-    // Check equality between two vectors by index
-    bool equal(int index1, int index2) const; 
-
-    // Check equality between vector and values
-    bool equal(int index, T *v) const; 
-
     // Get k-nearest neighbors for a query
     std::vector<int> query_solutions(const std::string& file_name, int query_index);  
 
@@ -133,24 +127,6 @@ float Vectors<T>::euclidean_distance(int index1, int index2) const {
     dist_matrix[index1][index2] = dist_matrix[index2][index1] = sum;
 
     return dist_matrix[index1][index2];
-}
-
-// Check equality of two vectors by index
-template <typename T>
-bool Vectors<T>::equal(int index1, int index2) const { 
-    for (auto i = 0 ; i < dimention ; i++) {
-        if (vectors[index1][i] != vectors[index2][i]) return false;
-    }
-    return true; 
-}  
-
-// Check equality of a vector with specific values
-template <typename T>
-bool Vectors<T>::equal(int index, T *v) const { 
-    for (auto i = 0 ; i < dimention ; i++) {
-        if (vectors[index][i] != v[i]) return false;
-    }
-    return true; 
 }
 
 // Load k-nearest neighbors for a query from file
