@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
         std::cout << "\n--- Vamana Initialization ---\n"
                   << "1) Read Vamana structure from file\n"
                   << "2) Create a new Vamana structure\n"
-                  << "Enter choice (1-3): ";
+                  << "Enter choice (1-2): ";
         std::cin >> choice;
 
         if (choice == 1) { // Option to read Vamana from file
