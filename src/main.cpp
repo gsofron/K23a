@@ -141,8 +141,8 @@ int main(int argc, char *argv[]) {
 
     // Load vectors
     int read_vectors;
-    Vectors<float> vectors("siftsmall/siftsmall_base.fvecs", read_vectors, base_vectors, queries_vectors);
-    vectors.read_queries("siftsmall/siftsmall_query.fvecs", queries_vectors);
+    Vectors<float> vectors(base_file, read_vectors, base_vectors, queries_vectors);
+    vectors.read_queries(query_file, queries_vectors);
 
     // Output parameters
     std::cout << "-----Parameters-----" << std::endl;
