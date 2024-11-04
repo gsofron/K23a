@@ -34,7 +34,7 @@ GreedySearch(DirectedGraph& graph, Vectors<T>& vectors, int start, int query, in
         visited[p_star->second] = true;
 
         // Insert neighbors with distances
-        auto neighbors = graph.get_neighbors(p_star->second);
+        const auto& neighbors = graph.get_neighbors(p_star->second);
         for (auto neighbor : neighbors) {
             L_set.insert({vectors.euclidean_distance_cached(query, neighbor), neighbor});
         }

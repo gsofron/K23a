@@ -21,7 +21,7 @@ public:
     // Load vectors from a file
     Vectors(const std::string& file_name, int& num_read_vectors, int max_vectors, int queries_num);
 
-    // Initialize vectors with predefined values
+    // Initialize vectors with predefined values (only for testing)
     Vectors(int num_vectors, int queries_num);
 
     ~Vectors(); // Destructor to clean up allocated memory
@@ -44,7 +44,7 @@ public:
     // Load queries from a file
     void read_queries(const std::string& file_name, int queries_num); 
 
-    // Add a new query vector
+    // Add a new query vector (only for testing)
     void add_query(T *values); 
 };
 
