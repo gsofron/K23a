@@ -3,7 +3,7 @@ INC_DIR := ../include
 SRC_DIR := .
 
 CXX = g++
-CXXFLAGS = -g -Wall -Wextra $(addprefix -I,$(INC_DIR)) -std=c++17
+CXXFLAGS = -g -Wall -Wextra -std=c++17 -O2 $(addprefix -I,$(INC_DIR))
 
 EXEC := ../k23a
 
