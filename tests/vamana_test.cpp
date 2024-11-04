@@ -7,6 +7,22 @@
 #define L 20
 #define R 3
 
+void test_random_graph(void) {
+    // Create random vectors of ints to use as a dataset
+    Vectors<int> vectors = Vectors<int>(NUM_OF_ENTRIES, 0);
+
+    // Create the random graph
+    DirectedGraph *g = random_graph(NUM_OF_ENTRIES, R);
+
+    // Test the out-degree of each vertex. It should be == R
+    int n = vectors.size();
+    for (int i = 0; i < n; i++) {
+        TEST_CHECK(g->get_neighbors(i).size() == R);
+    }
+
+    delete g;
+}
+
 void test_medoid(void) {
     /* The testing-constructor of the Vectors class creates vectors using
        the following deterministic formula: vectors[i][j] = i * 3 + j + 1,
@@ -76,6 +92,7 @@ void test_read_and_write_file(void) {
 }
 
 TEST_LIST = {
+    { "test_random_graph", test_random_graph },
     { "test_medoid", test_medoid },
     { "test_vamana", test_vamana },
     { "test_read_and_write_file", test_read_and_write_file },
