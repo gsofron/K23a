@@ -1,3 +1,6 @@
+#define VEC_DIMENSION 128
+#define K 100
+
 #include <cstdlib>     
 #include <ctime>        
 #include <fstream>      
@@ -12,25 +15,24 @@
 #include "vectors.hpp"
 
 // Command line: ./k23a -b <base file> -q <query file> -g <groundtruth file> -t <field type> -n <num base vectors> 
-//               -d <dim> -k <neighbors> -a <alpha> -l <L> -r <R>
+//               -a <alpha> -l <L> -r <R>
 
 // Parse input arguments and load necessary parameters
 void parse_parameters(int argc, char *argv[], std::string &base_file, std::string &query_file, 
                       std::string &groundtruth_file, int &field_type, int &base_vectors, int &queries_vectors, 
-                      int &vector_dimension, int &k, float &a, int &L, int &R) {
+                      float &a, int &L, int &R) {
     int opt;
     std::ifstream file;
 
-    // Require 23 arguments for full input specification
-    if (argc != 23) {
+    // Require 19 arguments for full input specification
+    if (argc != 19) {
         std::cerr << "Usage: " << argv[0] << " -b <base file> -q <query file> -g <groundtruth file> "
-                     "-t <field type> -n <num base vectors> -m <num queries> -d <dimension> "
-                     "-k <neighbors> -a <alpha> -l <L> -r <R>" << std::endl;
+                     "-t <field type> -n <num base vectors> -m <num queries> -a <alpha> -l <L> -r <R>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
     // Parse arguments using getopt
-    while ((opt = getopt(argc, argv, "b:q:g:t:n:m:d:k:a:l:r:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:q:g:t:n:m:a:l:r:")) != -1) {
         switch (opt) {
         case 'b': // Base vectors file
             base_file = optarg;
@@ -74,20 +76,6 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
                 exit(EXIT_FAILURE);
             }
             break;
-        case 'd': // Vector dimension
-            vector_dimension = std::stoi(optarg);
-            if (vector_dimension <= 0) {
-                std::cerr << "Vector dimension must be positive" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            break;
-        case 'k': // Number of neighbors
-            k = std::stoi(optarg);
-            if (k <= 0 || k >= base_vectors) {
-                std::cerr << "k must be positive and smaller than total base vectors" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            break;
         case 'a': // Alpha value
             a = std::stof(optarg);
             if (a < 1.0) {
@@ -97,8 +85,8 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
             break;
         case 'l': // Greedy search limit L
             L = std::stoi(optarg);
-            if (L < k) {
-                std::cerr << "L cannot be smaller than k" << std::endl;
+            if (L < K) {
+                std::cerr << "L cannot be smaller than K" << std::endl;
                 exit(EXIT_FAILURE);
             }
             break;
@@ -111,8 +99,7 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
             break;
         default:
             std::cerr << "Usage: " << argv[0] << " -b <base file> -q <query file> -g <groundtruth file> "
-                         "-t <field type> -n <num base vectors> -d <dimension> -k <neighbors> -a <alpha> "
-                         "-l <L> -r <R>" << std::endl;
+                     "-t <field type> -n <num base vectors> -m <num queries> -a <alpha> -l <L> -r <R>" << std::endl;
             exit(EXIT_FAILURE);
         }
     }
@@ -134,10 +121,10 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));  // Seed for randomization
 
     // Initialize parameters and parse command line input
-    int base_vectors, queries_vectors, vector_dimension, k, L, R, field_type;
+    int base_vectors, queries_vectors, L, R, field_type;
     float a;
     std::string base_file, query_file, groundtruth_file;
-    parse_parameters(argc, argv, base_file, query_file, groundtruth_file, field_type, base_vectors, queries_vectors, vector_dimension, k, a, L, R);
+    parse_parameters(argc, argv, base_file, query_file, groundtruth_file, field_type, base_vectors, queries_vectors, a, L, R);
 
     // Load vectors
     int read_vectors;
@@ -153,8 +140,8 @@ int main(int argc, char *argv[]) {
     std::cout << "Base vectors = " << base_vectors << std::endl;
     std::cout << "Queries vectors = " << queries_vectors << std::endl;
     std::cout << "Vectors read = " << read_vectors << std::endl;
-    std::cout << "Vector dimension = " << vector_dimension << std::endl;
-    std::cout << "k = " << k << std::endl;
+    std::cout << "Vector dimension = " << VEC_DIMENSION << std::endl;
+    std::cout << "K = " << K << std::endl;
     std::cout << "L = " << L << std::endl;
     std::cout << "R = " << R << std::endl;
     std::cout << "a = " << a << std::endl;
@@ -188,8 +175,8 @@ int main(int argc, char *argv[]) {
 
     while (true) {
         std::cout << "\n--- Menu ---\n"
-                << "1) Find k-nearest neighbors for a query\n"
-                << "2) Find k-nearest neighbors for all queries\n"
+                << "1) Find K-nearest neighbors for a query\n"
+                << "2) Find K-nearest neighbors for all queries\n"
                 << "3) Save Vamana structure to file\n"
                 << "4) Exit\n"
                 << "Enter choice (1-4): ";
@@ -205,19 +192,19 @@ int main(int argc, char *argv[]) {
                 continue;
             }
 
-            auto result = GreedySearch(*g, vectors, 0, index + base_vectors, k, L);
+            auto result = GreedySearch(*g, vectors, 0, index + base_vectors, K, L);
             auto groundtruth = vectors.query_solutions(groundtruth_file, index);
             std::vector<int> difference = findDifference(groundtruth, result.first);
-            std::cout << "Recall: " << (static_cast<float>(k - difference.size()) / k) << std::endl;
+            std::cout << "Recall: " << (static_cast<float>(K - difference.size()) / K) << std::endl;
 
         } else if (choice == 2) { // All queries processing
             int mismatch_count = 0;
             for (int j = 0; j < queries_vectors; j++) {
-                auto result = GreedySearch(*g, vectors, 0, j + base_vectors, k, L);
+                auto result = GreedySearch(*g, vectors, 0, j + base_vectors, K, L);
                 auto groundtruth = vectors.query_solutions(groundtruth_file, j);
                 mismatch_count += findDifference(groundtruth, result.first).size();
             }
-            std::cout << "Recall: " << (static_cast<float>((k * queries_vectors) - mismatch_count) / (k * queries_vectors)) << std::endl;
+            std::cout << "Recall: " << (static_cast<float>((K * queries_vectors) - mismatch_count) / (K * queries_vectors)) << std::endl;
 
         } else if (choice == 3) { // Save Vamana structure to file
             std::string filename;
