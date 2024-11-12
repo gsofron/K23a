@@ -14,25 +14,22 @@
 #include "vamana.hpp"
 #include "vectors.hpp"
 
-// Command line: ./k23a -b <base file> -q <query file> -g <groundtruth file> -t <field type> -n <num base vectors> 
-//               -a <alpha> -l <L> -r <R>
+// Command line: time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -a 1.1 -l 150 -r 100
 
 // Parse input arguments and load necessary parameters
 void parse_parameters(int argc, char *argv[], std::string &base_file, std::string &query_file, 
-                      std::string &groundtruth_file, int &field_type, int &base_vectors, int &queries_vectors, 
-                      float &a, int &L, int &R) {
+                      std::string &groundtruth_file, float &a, int &L, int &R) {
     int opt;
     std::ifstream file;
 
-    // Require 19 arguments for full input specification
-    if (argc != 19) {
-        std::cerr << "Usage: " << argv[0] << " -b <base file> -q <query file> -g <groundtruth file> "
-                     "-t <field type> -n <num base vectors> -m <num queries> -a <alpha> -l <L> -r <R>" << std::endl;
+    // Require 13 arguments for full input specification
+    if (argc != 13) {
+        std::cerr << "Usage: " << argv[0] << " -b <base file> -q <query file> -g <groundtruth file> -a <alpha> -l <L> -r <R>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
     // Parse arguments using getopt
-    while ((opt = getopt(argc, argv, "b:q:g:t:n:m:a:l:r:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:q:g:a:l:r:")) != -1) {
         switch (opt) {
         case 'b': // Base vectors file
             base_file = optarg;
@@ -52,27 +49,6 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
             groundtruth_file = optarg;
             if (!std::ifstream(groundtruth_file)) {
                 std::cerr << "Groundtruth file doesn't exist" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            break;
-        case 't': // Field type
-            field_type = std::stoi(optarg);
-            if (field_type < 0 || field_type > 1) {
-                std::cerr << "Invalid field type: 0 for unsigned char, 1 for float" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            break;
-        case 'n': // Base vectors count
-            base_vectors = std::stoi(optarg);
-            if (base_vectors <= 0) {
-                std::cerr << "Number of base vectors must be positive" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            break;
-        case 'm': // Query vectors count
-            queries_vectors = std::stoi(optarg);
-            if (queries_vectors <= 0) {
-                std::cerr << "Number of query vectors must be positive" << std::endl;
                 exit(EXIT_FAILURE);
             }
             break;
@@ -98,8 +74,7 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
             }
             break;
         default:
-            std::cerr << "Usage: " << argv[0] << " -b <base file> -q <query file> -g <groundtruth file> "
-                     "-t <field type> -n <num base vectors> -m <num queries> -a <alpha> -l <L> -r <R>" << std::endl;
+            std::cerr << "Usage: " << argv[0] << " -b <base file> -q <query file> -g <groundtruth file> -a <alpha> -l <L> -r <R>" << std::endl;
             exit(EXIT_FAILURE);
         }
     }
@@ -121,10 +96,10 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));  // Seed for randomization
 
     // Initialize parameters and parse command line input
-    int base_vectors, queries_vectors, L, R, field_type;
+    int base_vectors = 10000, queries_vectors = 100, L, R;
     float a;
     std::string base_file, query_file, groundtruth_file;
-    parse_parameters(argc, argv, base_file, query_file, groundtruth_file, field_type, base_vectors, queries_vectors, a, L, R);
+    parse_parameters(argc, argv, base_file, query_file, groundtruth_file, a, L, R);
 
     // Load vectors
     int read_vectors;
@@ -136,12 +111,11 @@ int main(int argc, char *argv[]) {
     std::cout << "Base file = " << base_file << std::endl;
     std::cout << "Query file = " << query_file << std::endl;
     std::cout << "Groundtruth file = " << groundtruth_file << std::endl;
-    std::cout << "Field type = " << field_type << std::endl;
     std::cout << "Base vectors = " << base_vectors << std::endl;
     std::cout << "Queries vectors = " << queries_vectors << std::endl;
     std::cout << "Vectors read = " << read_vectors << std::endl;
     std::cout << "Vector dimension = " << VEC_DIMENSION << std::endl;
-    std::cout << "K = " << K << std::endl;
+    std::cout << "k = " << K << std::endl;
     std::cout << "L = " << L << std::endl;
     std::cout << "R = " << R << std::endl;
     std::cout << "a = " << a << std::endl;
