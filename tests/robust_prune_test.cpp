@@ -1,9 +1,9 @@
-#include <ctime>        // std::time for srand()
-#include <limits>       // float max
+#include <ctime>                // std::time for srand()
+#include <limits>               // float max
 
 #include "acutest.h"
 #include "robust_prune.hpp"
-#include "vamana.hpp"
+#include "vamana.hpp"           // random_graph()
 
 #define NUM_OF_VECS 100
 #define R 3
@@ -14,7 +14,7 @@ void test_robust_prune_general(void) {
     std::srand(unsigned(std::time(0)));
 
     // Get some vectors
-    auto vectors = Vectors<int>(NUM_OF_VECS, 0);
+    auto vectors = Vectors(NUM_OF_VECS, 0);
 
     // Create a random graph where each vertex points to all other vertices
     DirectedGraph *g = random_graph(NUM_OF_VECS, NUM_OF_VECS-1);
@@ -38,7 +38,7 @@ void test_robust_prune_empty_set(void) {
     std::srand(unsigned(std::time(0)));
 
     // Get some vectors
-    auto vectors = Vectors<int>(NUM_OF_VECS, 0);
+    auto vectors = Vectors(NUM_OF_VECS, 0);
 
     // Create a random graph where each vertex points to all other vertices
     DirectedGraph *g = random_graph(NUM_OF_VECS, NUM_OF_VECS-1);
@@ -81,7 +81,7 @@ void test_robust_prune_full_set(void) {
     std::srand(unsigned(std::time(0)));
 
     // Get some vectors
-    auto vectors = Vectors<int>(NUM_OF_VECS, 0);
+    auto vectors = Vectors(NUM_OF_VECS, 0);
 
     // Create a graph where each vertex points to only one random vertex
     DirectedGraph *g = random_graph(NUM_OF_VECS, 1);
