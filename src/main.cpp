@@ -15,9 +15,9 @@
 #include "vectors.hpp"
 
 // Execution examples
-// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -a 1.1 -l 150 -r 100 -i -1
-// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -s vamana.bin -a 1.1 -l 150 -r 100 -i -1
-// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -v vamana.bin -s new.bin -a 1.1 -l 150 -r 100 -i -1
+// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -a 1.1 -l 150 -r 100 -t 50 -i -1
+// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -s vamana.bin -a 1.1 -l 150 -r 100 -t 50 -i -1
+// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -v vamana.bin -s new.bin -a 1.1 -l 150 -r 100 -t 50 -i -1
 
 void print_usage() {
     std::cerr << "Usage: " << std::endl;
@@ -28,6 +28,7 @@ void print_usage() {
     std::cerr << "-a <alpha>" << std::endl;
     std::cerr << "-l <l>" << std::endl;
     std::cerr << "-r <r>" << std::endl;
+    std::cerr << "-t <tau>" << std::endl;
     std::cerr << "-i <index> (use -1 to calculate total recall)" << std::endl;
     std::cerr << "---OPTIONAL FLAGS---" << std::endl;
     std::cerr << "-v <vamana file>" << std::endl;
@@ -36,16 +37,16 @@ void print_usage() {
 }
 
 // Parse input arguments and load necessary parameters
-void parse_parameters(int argc, char *argv[], int query_count, std::string &base_file, std::string &query_file, std::string &groundtruth_file, std::string &vamana_file, std::string &save_file, float &a, int &L, int &R, int &index) {
+void parse_parameters(int argc, char *argv[], int query_count, std::string &base_file, std::string &query_file, std::string &groundtruth_file, std::string &vamana_file, std::string &save_file, float &a, int &L, int &R, int &t, int &index) {
     int opt;
-    bool base_flag = false, query_flag = false, ground_flag = false, a_flag = false, l_flag = false, r_flag = false, index_flag = false;
+    bool base_flag = false, query_flag = false, ground_flag = false, a_flag = false, l_flag = false, r_flag = false, index_flag = false, t_flag = false;
     std::ifstream file;
 
-    // Minimum arguements are 15 and maximum are 19. Arguements come in pairs so argc must always be odd
-    if (argc < 15 || argc > 19 || argc % 2 == 0) print_usage();
+    // Minimum arguements are 17 and maximum are 21. Arguements come in pairs so argc must always be odd
+    if (argc < 17 || argc > 21 || argc % 2 == 0) print_usage();
     
     // Parse arguments using getopt
-    while ((opt = getopt(argc, argv, "b:q:g:v:s:a:l:r:i:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:q:g:v:s:a:l:r:t:i:")) != -1) {
         switch (opt) {
         case 'b': // Base vectors file
             base_file = optarg;
@@ -105,6 +106,14 @@ void parse_parameters(int argc, char *argv[], int query_count, std::string &base
                 exit(EXIT_FAILURE);
             }
             break;
+        case 't': // Tau for FindMedoid()
+            t = std::stoi(optarg);
+            t_flag = true;
+            if (t < 1) {
+                std::cerr << "Tau must be greater than 0" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
         case 'i': // Index of query vector
             index = std::stoi(optarg);
             index_flag = true;
@@ -119,7 +128,7 @@ void parse_parameters(int argc, char *argv[], int query_count, std::string &base
     }
 
     // Check if all mandatory flags are given
-    if (!base_flag || !query_flag || !ground_flag || !a_flag || !l_flag || !r_flag || !index_flag) print_usage();
+    if (!base_flag || !query_flag || !ground_flag || !a_flag || !l_flag || !r_flag || !index_flag || !t_flag) print_usage();
 
     // Output parameters
     std::cout << "-----Parameters-----" << std::endl;
@@ -132,6 +141,7 @@ void parse_parameters(int argc, char *argv[], int query_count, std::string &base
     std::cout << "L = " << L << std::endl;
     std::cout << "R = " << R << std::endl;
     std::cout << "a = " << a << std::endl;
+    std::cout << "t = " << t << std::endl;
     std::cout << "index = " << index << std::endl;
     std::cout << std::endl;
 }
@@ -152,10 +162,10 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));  // Seed for randomization
 
     // Initialize parameters and parse command line input
-    int base_vectors = 10000, queries_vectors = 100, L, R, index;
+    int base_vectors = 10000, queries_vectors = 100, L, R, t, index;
     float a;
     std::string base_file, query_file, groundtruth_file, vamana_file = "", save_file = "";
-    parse_parameters(argc, argv, queries_vectors, base_file, query_file, groundtruth_file, vamana_file, save_file, a, L, R, index);
+    parse_parameters(argc, argv, queries_vectors, base_file, query_file, groundtruth_file, vamana_file, save_file, a, L, R, t, index);
 
     // Load vectors
     int read_vectors;
