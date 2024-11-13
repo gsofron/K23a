@@ -15,9 +15,9 @@
 #include "vectors.hpp"
 
 // Execution examples
-// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -a 1.1 -l 150 -r 100
-// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -v vamana.bin -a 1.1 -l 150 -r 100
-// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -v vamana.bin -s new.bin -a 1.1 -l 150 -r 100
+// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -a 1.1 -l 150 -r 100 -i -1
+// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -s vamana.bin -a 1.1 -l 150 -r 100 -i -1
+// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -v vamana.bin -s new.bin -a 1.1 -l 150 -r 100 -i -1
 
 void print_usage() {
     std::cerr << "Usage: " << std::endl;
@@ -28,6 +28,7 @@ void print_usage() {
     std::cerr << "-a <alpha>" << std::endl;
     std::cerr << "-l <l>" << std::endl;
     std::cerr << "-r <r>" << std::endl;
+    std::cerr << "-i <index> (use -1 to calculate total recall)" << std::endl;
     std::cerr << "---OPTIONAL FLAGS---" << std::endl;
     std::cerr << "-v <vamana file>" << std::endl;
     std::cerr << "-s <save file>" << std::endl;
@@ -35,16 +36,16 @@ void print_usage() {
 }
 
 // Parse input arguments and load necessary parameters
-void parse_parameters(int argc, char *argv[], std::string &base_file, std::string &query_file, std::string &groundtruth_file, std::string &vamana_file, std::string &save_file, float &a, int &L, int &R) {
+void parse_parameters(int argc, char *argv[], int query_count, std::string &base_file, std::string &query_file, std::string &groundtruth_file, std::string &vamana_file, std::string &save_file, float &a, int &L, int &R, int &index) {
     int opt;
-    bool base_flag = false, query_flag = false, ground_flag = false, a_flag = false, l_flag = false, r_flag = false;
+    bool base_flag = false, query_flag = false, ground_flag = false, a_flag = false, l_flag = false, r_flag = false, index_flag = false;
     std::ifstream file;
 
-    // Minimum arguements are 13 and maximum are 17. Arguements come in pairs so argc must always be odd
-    if (argc < 13 || argc > 17 || argc % 2 == 0) print_usage();
+    // Minimum arguements are 15 and maximum are 19. Arguements come in pairs so argc must always be odd
+    if (argc < 15 || argc > 19 || argc % 2 == 0) print_usage();
     
     // Parse arguments using getopt
-    while ((opt = getopt(argc, argv, "b:q:g:v:s:a:l:r:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:q:g:v:s:a:l:r:i:")) != -1) {
         switch (opt) {
         case 'b': // Base vectors file
             base_file = optarg;
@@ -104,13 +105,21 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
                 exit(EXIT_FAILURE);
             }
             break;
+        case 'i': // Index of query vector
+            index = std::stoi(optarg);
+            index_flag = true;
+            if (index < -1 || index >= query_count) {
+                std::cerr << "Invalid index" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
         default:
             print_usage();
         }
     }
 
     // Check if all mandatory flags are given
-    if (!base_flag || !query_flag || !ground_flag || !a_flag || !l_flag || !r_flag) print_usage();
+    if (!base_flag || !query_flag || !ground_flag || !a_flag || !l_flag || !r_flag || !index_flag) print_usage();
 
     // Output parameters
     std::cout << "-----Parameters-----" << std::endl;
@@ -123,6 +132,8 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
     std::cout << "L = " << L << std::endl;
     std::cout << "R = " << R << std::endl;
     std::cout << "a = " << a << std::endl;
+    std::cout << "index = " << index << std::endl;
+    std::cout << std::endl;
 }
 
 // Helper function to find elements in `a` not in `b`
@@ -141,10 +152,10 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));  // Seed for randomization
 
     // Initialize parameters and parse command line input
-    int base_vectors = 10000, queries_vectors = 100, L, R;
+    int base_vectors = 10000, queries_vectors = 100, L, R, index;
     float a;
     std::string base_file, query_file, groundtruth_file, vamana_file = "", save_file = "";
-    parse_parameters(argc, argv, base_file, query_file, groundtruth_file, vamana_file, save_file, a, L, R);
+    parse_parameters(argc, argv, queries_vectors, base_file, query_file, groundtruth_file, vamana_file, save_file, a, L, R, index);
 
     // Load vectors
     int read_vectors;
@@ -157,51 +168,28 @@ int main(int argc, char *argv[]) {
     if (!vamana_file.empty()) g = read_vamana_from_file(vamana_file);
     else g = vamana(vectors, a, L, R);
 
-    int choice;
-
-    while (true) {
-        std::cout << "\n--- Menu ---\n"
-                << "1) Find K-nearest neighbors for a query\n"
-                << "2) Find K-nearest neighbors for all queries\n"
-                << "3) Exit\n"
-                << "Enter choice (1-3): ";
-        std::cin >> choice;
-
-        if (choice == 1) { // Single query processing
-            int index;
-            std::cout << "Enter query index (0," << queries_vectors - 1 << "): ";
-            std::cin >> index;
-
-            if (index >= queries_vectors) {
-                std::cout << "Invalid index." << std::endl;
-                continue;
-            }
-
-            auto result = GreedySearch(*g, vectors, 0, index + base_vectors, K, L);
-            auto groundtruth = vectors.query_solutions(groundtruth_file, index);
-            std::vector<int> difference = findDifference(groundtruth, result.first);
-            std::cout << "Recall: " << (static_cast<float>(K - difference.size()) / K) << std::endl;
-
-        } else if (choice == 2) { // All queries processing
-            int mismatch_count = 0;
-            for (int j = 0; j < queries_vectors; j++) {
-                auto result = GreedySearch(*g, vectors, 0, j + base_vectors, K, L);
-                auto groundtruth = vectors.query_solutions(groundtruth_file, j);
-                mismatch_count += findDifference(groundtruth, result.first).size();
-            }
-            std::cout << "Recall: " << (static_cast<float>((K * queries_vectors) - mismatch_count) / (K * queries_vectors)) << std::endl;
-
-        } else if (choice == 3) { // Exit
-            std::cout << "Exiting the program." << std::endl;
-            break;
-
-        } else {
-            std::cout << "Invalid option." << std::endl;
+    // User wants to calculate total recall
+    if (index == -1) {
+        int mismatch_count = 0;
+        for (int j = 0; j < queries_vectors; j++) {
+            auto result = GreedySearch(*g, vectors, 0, j + base_vectors, K, L);
+            auto groundtruth = vectors.query_solutions(groundtruth_file, j);
+            mismatch_count += findDifference(groundtruth, result.first).size();
         }
+        std::cout << "Recall: " << (static_cast<float>((K * queries_vectors) - mismatch_count) / (K * queries_vectors)) << std::endl;
+    }
+    // User wants to calculate a single recall
+    // NOTE: Since we check if index is valid during parse_parameters(), we are always in bounds for GreedySearch()
+    else {
+        auto result = GreedySearch(*g, vectors, 0, index + base_vectors, K, L);
+        auto groundtruth = vectors.query_solutions(groundtruth_file, index);
+        std::vector<int> difference = findDifference(groundtruth, result.first);
+        std::cout << "Recall: " << (static_cast<float>(K - difference.size()) / K) << std::endl;
     }
 
-    // Check if user wants to save the graph before deleting
+    // Check if user wants to save the graph
     if (!save_file.empty()) write_vamana_to_file(*g, save_file);
+
     delete g;
     return 0;
 }
