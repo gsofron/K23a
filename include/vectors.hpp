@@ -30,7 +30,7 @@ public:
     int dimension() const { return dimention; }
     float* operator[](int index) const { return vectors[index]; }
 
-    bool same_filter(int index1, int index2); 
+    bool same_filter(int index1, int index2); // Check if these two vectors has the same filter
 
     // Calculate Euclidean distance between two vectors
     float euclidean_distance(int index1, int index2) const;

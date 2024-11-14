@@ -11,8 +11,10 @@ Vectors::Vectors(const std::string& file_name, int vectors_dimention, int num_re
     std::ifstream file(file_name, std::ios::binary);
     if (!file) throw std::runtime_error("Error opening file: " + file_name);
 
+    // Read the number of vectors
     int max_vectors;
     if (!file.read(reinterpret_cast<char*>(&max_vectors), sizeof(int))) return;
+    // Keep the smaller number so it is controllable the number of vectors that  will be read
     max_vectors = std::min(max_vectors, num_read_vectors);
     
     vectors = new float*[max_vectors + queries];
@@ -22,14 +24,16 @@ Vectors::Vectors(const std::string& file_name, int vectors_dimention, int num_re
     while (base_size < max_vectors && file) {
         if (!file.read(reinterpret_cast<char*>(&filters[base_size]), sizeof(float))) break;
 
-        float x;
-        if (!file.read(reinterpret_cast<char*>(&x), sizeof(float))) break;
+        // Ignore the timestamp value
+        file.seekg(sizeof(float), std::ios::cur);
 
+        // Read the vectors values
         vectors[base_size] = new float[dimention];
         if (!file.read(reinterpret_cast<char*>(vectors[base_size]), dimention * sizeof(float))) {
             throw std::runtime_error("Error reading vector data from file");
         }
 
+        // Initialise the euclidean distances of all the vectors
         dist_matrix[base_size] = new float[max_vectors]();
         for (int i = 0 ; i < base_size ; i++) {
             euclidean_distance(base_size, i);
@@ -101,6 +105,7 @@ void Vectors::read_queries(const std::string& file_name, int read_num) {
     std::ifstream file(file_name, std::ios::binary);
     if (!file) throw std::runtime_error("Error opening file: " + file_name);
 
+    // Read the number of queries
     int queries_num;
     if (!file.read(reinterpret_cast<char*>(&queries_num), sizeof(int))) return;
     queries_num = std::min(queries_num, read_num);
@@ -108,21 +113,22 @@ void Vectors::read_queries(const std::string& file_name, int read_num) {
     int num_read_vectors = base_size;
 
     while (num_read_vectors < base_size + queries_num && file) {
-        
-        float x;
-        if (!file.read(reinterpret_cast<char*>(&x), sizeof(float))) break;
+        // Ignore the type of the query since it is also determined from the second value
+        file.seekg(sizeof(float), std::ios::cur);
 
         if (!file.read(reinterpret_cast<char*>(&filters[num_read_vectors]), sizeof(float))) break;
 
-        if (!file.read(reinterpret_cast<char*>(&x), sizeof(float))) break;
-        if (!file.read(reinterpret_cast<char*>(&x), sizeof(float))) break;
+        // Ignore the timestamp related values
+        file.seekg(2*sizeof(float), std::ios::cur);
 
+        // Read the queries' values
         vectors[num_read_vectors] = new float[dimention];
         dist_matrix[num_read_vectors] = new float[base_size]();
         if (!file.read(reinterpret_cast<char*>(vectors[num_read_vectors]), dimention * sizeof(float))) {
             throw std::runtime_error("Error reading vector data from file");
         }
 
+        // Initialise euclidean distance from query to every other base vector 
         for (int i = 0 ; i < base_size ; i++) {
             dist_matrix[num_read_vectors][i] = euclidean_distance(num_read_vectors, i);
         }

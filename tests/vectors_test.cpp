@@ -37,6 +37,7 @@ void test_vectors_constructor(void) {
     }
 }
 
+// Test for vectors size
 void test_vectors_size(void) {
     Vectors vectors100(100, 0);  
     TEST_CHECK(vectors100.size() == 100); 
@@ -45,6 +46,7 @@ void test_vectors_size(void) {
     TEST_CHECK(vectors50.size() == 50); 
 }
 
+// Test for vectors dimension
 void test_vectors_dimension(void) {
     Vectors vectors(100, 0);  
     TEST_CHECK(vectors.dimension() == 3); 
@@ -79,6 +81,7 @@ void test_vectors_read_queries(void) {
     }
 }
 
+// Test vectors same_filter
 void test_vectors_same_filter(void) {
     Vectors vectors(100, 0);  
 
