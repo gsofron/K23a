@@ -113,8 +113,13 @@ void Vectors::read_queries(const std::string& file_name, int read_num) {
     int num_read_vectors = base_size;
 
     while (num_read_vectors < base_size + queries_num && file) {
-        // Ignore the type of the query since it is also determined from the second value
-        file.seekg(sizeof(float), std::ios::cur);
+        // Determine the type of the query
+        float type;
+        if (!file.read(reinterpret_cast<char*>(&type), sizeof(float))) break;
+        if (type > 1) { // Ignore it if it is a timestamp query
+            file.seekg(103*sizeof(float), std::ios::cur);
+            continue;
+        }
 
         if (!file.read(reinterpret_cast<char*>(&filters[num_read_vectors]), sizeof(float))) break;
 
@@ -128,9 +133,16 @@ void Vectors::read_queries(const std::string& file_name, int read_num) {
             throw std::runtime_error("Error reading vector data from file");
         }
 
-        // Initialise euclidean distance from query to every other base vector 
-        for (int i = 0 ; i < base_size ; i++) {
-            dist_matrix[num_read_vectors][i] = euclidean_distance(num_read_vectors, i);
+        if (!type) { // Initialise euclidean distance from query to every other base vector 
+            for (int i = 0 ; i < base_size ; i++) {
+                dist_matrix[num_read_vectors][i] = euclidean_distance(num_read_vectors, i);
+            }
+        } else { // Initialise the euclidean distance from the query to every other vector that has the same filter
+            for (int i = 0 ; i < base_size ; i++) {
+                if (filters[num_read_vectors] == filters[i]) {
+                    dist_matrix[num_read_vectors][i] = euclidean_distance(num_read_vectors, i);
+                }
+            }
         }
         num_read_vectors++;
     }
