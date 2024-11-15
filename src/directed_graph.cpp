@@ -37,6 +37,21 @@ bool DirectedGraph::remove(Vertex source, Vertex destination) {
     return neighbors[source].erase(destination) > 0;
 }
 
+// Stitch another graph to the existing graph. This is done by unionizing their edge sets
+void DirectedGraph::stitch(DirectedGraph *g) {
+    // Graphs should have the same size
+    int size = g->get_size();
+    ERROR_EXIT(neighbors_size != size, "Cannot stitch graphs with different sizes");
+
+    // Insert all edges of the other graph to the existing graph
+    for (int i = 0 ; i < size ; i++) {
+        std::unordered_set<Vertex> neighbors = g->get_neighbors(i);
+        for (auto j : neighbors) {
+            insert(i, j);
+        }
+    }
+}
+
 // Returns a reference to an unordered-set that contains the neighbors of vertex 'v'. 'const' is used to prevent data modification
 const std::unordered_set<Vertex>& DirectedGraph::get_neighbors(Vertex v) const {
     ERROR_EXIT(v < 0 || v >= neighbors_size, "Invalid index (vertex)")

@@ -11,7 +11,7 @@ all: ../directed_graph_test ../vectors_test ../greedy_search_test ../robust_prun
 ../directed_graph_test: $(BUILD_DIR)/directed_graph_test.o $(BUILD_DIR)/directed_graph.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-../vectors_test: $(BUILD_DIR)/vectors_test.o
+../vectors_test: $(BUILD_DIR)/vectors_test.o $(BUILD_DIR)/vectors.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 ../greedy_search_test: $(BUILD_DIR)/greedy_search_test.o $(BUILD_DIR)/directed_graph.o
