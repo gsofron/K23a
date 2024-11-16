@@ -23,6 +23,9 @@ public:
     // Returns true/false based on the removal's success
     bool remove(Vertex source, Vertex destination);
 
+    // Stitch another graph to the existing graph. This is done by unionizing their edge sets
+    void stitch(DirectedGraph *g);
+
     // Returns a reference to an unordered-set that contains the neighbors of vertex 'v'. 'const' is used to prevent data modification
     const std::unordered_set<Vertex>& get_neighbors(Vertex v) const;
 
