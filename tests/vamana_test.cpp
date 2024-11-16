@@ -8,8 +8,8 @@
 #define R 3
 
 void test_random_graph(void) {
-    // Create random vectors of ints to use as a dataset
-    Vectors<int> vectors = Vectors<int>(NUM_OF_ENTRIES, 0);
+    // Create random vectors to use as a dataset
+    Vectors vectors = Vectors(NUM_OF_ENTRIES, 0);
 
     // Create the random graph
     DirectedGraph *g = random_graph(NUM_OF_ENTRIES, R);
@@ -28,7 +28,7 @@ void test_medoid(void) {
        the following deterministic formula: vectors[i][j] = i * 3 + j + 1,
        where the i-th row contains the vector of (const) dimesion d=3
        and j is the corresponding value in each dimension */
-    Vectors<int> vectors = Vectors<int>(5, 0);
+    Vectors vectors = Vectors(5, 0);
     /* Having created 5 vectors, their values are:
        vectors[0] = [1, 2, 3], vectors[1] = [4, 5, 6], vectors[2] = [7, 8, 9],
        vectors[3] = [10, 11, 12] and vectors[4] = [13, 14, 15] */
@@ -40,8 +40,8 @@ void test_medoid(void) {
 }
 
 void test_vamana(void) {
-    // Create random vectors of ints to use as a dataset
-    Vectors<int> vectors = Vectors<int>(NUM_OF_ENTRIES, 0);
+    // Create random vectors to use as a dataset
+    Vectors vectors = Vectors(NUM_OF_ENTRIES, 0);
 
     // Create the Vamana graph
     DirectedGraph *g = vamana(vectors, A, L, R);
@@ -57,7 +57,7 @@ void test_vamana(void) {
 
 void test_read_and_write_file(void) {
     // Create a random vamana graph and test the read_from and write_to functions
-    Vectors<int> vectors = Vectors<int>(NUM_OF_ENTRIES, 0);
+    Vectors vectors = Vectors(NUM_OF_ENTRIES, 0);
     DirectedGraph *g1 = vamana(vectors, A, L, R);
 
     const std::string file_name = "build/test_vamana_file";
