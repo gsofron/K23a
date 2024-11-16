@@ -17,7 +17,7 @@ all: ../directed_graph_test ../vectors_test ../greedy_search_test ../robust_prun
 ../greedy_search_test: $(BUILD_DIR)/greedy_search_test.o $(BUILD_DIR)/directed_graph.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-../robust_prune_test: $(BUILD_DIR)/robust_prune_test.o $(BUILD_DIR)/directed_graph.o $(BUILD_DIR)/vamana.o
+../robust_prune_test: $(BUILD_DIR)/robust_prune_test.o $(BUILD_DIR)/robust_prune.o $(BUILD_DIR)/directed_graph.o $(BUILD_DIR)/vamana.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 ../vamana_test: $(BUILD_DIR)/vamana_test.o $(BUILD_DIR)/directed_graph.o $(BUILD_DIR)/vamana.o
