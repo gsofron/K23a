@@ -7,6 +7,7 @@
 
 #include "greedy_search.hpp"
 #include "robust_prune.hpp"
+#include "utils.hpp"
 #include "vamana.hpp"
 
 // Creates a random R-regular out-degree directed graph
