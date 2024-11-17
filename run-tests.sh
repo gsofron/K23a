@@ -7,8 +7,8 @@
 ./greedy_search_test
 ./filtered_greedy_search_test
 ./robust_prune_test
-./vamana_test
 ./filtered_robust_prune_test
+./vamana_test
 
 # To run with `valgrind` execute:
 # valgrind --trace-children=yes ./run-tests.sh
