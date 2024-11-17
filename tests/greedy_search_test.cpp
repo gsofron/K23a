@@ -1,8 +1,6 @@
 #include "acutest.h"         
 #include <vector>
-#include <iostream>
-#include "vectors.hpp"          
-#include "directed_graph.hpp"    
+#include <iostream> 
 #include "greedy_search.hpp"      
 
 // Creates a sample directed graph with sequential and near-sequential edges
