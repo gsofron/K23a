@@ -9,32 +9,32 @@
 
 // Test for Vectors constructor 
 void test_vectors_constructor(void) {
-    // Vectors vectors("dummy/dummy-data.bin", 100, 100, 0);  // Initialize Vectors from file
+    Vectors vectors("dummy/dummy-data.bin", 100, 100, 0);  // Initialize Vectors from file
 
-    // // Expected values for the first vector
-    // const float init_values[] = {
-    //     2.15454, -3.02897, 0.698244, -0.415859, 2.10826, -0.423406, -0.265021,
-    //     1.48845, -0.635659, -0.322034, 0.288786, 1.50423, 0.60534, -0.0444409,
-    //     1.72059, 0.847015, -0.307805, 0.759683, 1.29945, -0.181562, 0.463562,
-    //     -0.193746, 0.649952, -1.15263, 0.048541, -0.627288, 0.398051, 0.0511783,
-    //     0.545563, 0.0495269, 0.0687726, -0.631042, 0.0826486, 0.731219, -0.226549,
-    //     0.215328, -0.148697, 0.413595, 0.0921035, 0.458715, -0.253046, -0.0336558,
-    //     -0.337412, -0.170269, 0.313249, 0.498627, 0.464264, 0.672622, 0.725523,
-    //     0.003511, -0.345974, 0.498223, -0.345793, 0.161103, -0.00469103, 0.0290951,
-    //     -0.28487, -0.35776, -0.37224, -0.371342, 0.515504, 0.162517, 0.0253236,
-    //     0.560636, 0.49534, 0.166332, -0.346384, 0.416897, 0.250396, -0.552659,
-    //     0.50076, 0.157336, -0.0468045, -0.460763, 0.540153, 0.0880996, -0.259423,
-    //     -0.285234, 0.442767, 0.17183, 0.0573628, -0.44357, -0.247626, 0.135093,
-    //     0.238867, 0.00215004, -0.139578, -0.425506, 0.164526, 0.342528, 0.432775,
-    //     -0.433014, -0.301049, -0.487173, 0.0114285, 0.386267, 0.16443, 0.0441171,
-    //     0.269416, -0.487473
-    // };
+    // Expected values for the first vector
+    const float init_values[] = {
+        2.15454, -3.02897, 0.698244, -0.415859, 2.10826, -0.423406, -0.265021,
+        1.48845, -0.635659, -0.322034, 0.288786, 1.50423, 0.60534, -0.0444409,
+        1.72059, 0.847015, -0.307805, 0.759683, 1.29945, -0.181562, 0.463562,
+        -0.193746, 0.649952, -1.15263, 0.048541, -0.627288, 0.398051, 0.0511783,
+        0.545563, 0.0495269, 0.0687726, -0.631042, 0.0826486, 0.731219, -0.226549,
+        0.215328, -0.148697, 0.413595, 0.0921035, 0.458715, -0.253046, -0.0336558,
+        -0.337412, -0.170269, 0.313249, 0.498627, 0.464264, 0.672622, 0.725523,
+        0.003511, -0.345974, 0.498223, -0.345793, 0.161103, -0.00469103, 0.0290951,
+        -0.28487, -0.35776, -0.37224, -0.371342, 0.515504, 0.162517, 0.0253236,
+        0.560636, 0.49534, 0.166332, -0.346384, 0.416897, 0.250396, -0.552659,
+        0.50076, 0.157336, -0.0468045, -0.460763, 0.540153, 0.0880996, -0.259423,
+        -0.285234, 0.442767, 0.17183, 0.0573628, -0.44357, -0.247626, 0.135093,
+        0.238867, 0.00215004, -0.139578, -0.425506, 0.164526, 0.342528, 0.432775,
+        -0.433014, -0.301049, -0.487173, 0.0114285, 0.386267, 0.16443, 0.0441171,
+        0.269416, -0.487473
+    };
 
-    // // Verify the first vector values in 'vectors' match expected values
-    // const float epsilon = 1e-5;
-    // for (int i = 0; i < 100; i++) {
-    //     TEST_CHECK(std::abs(init_values[i] - vectors[0][i]) < epsilon);
-    // }
+    // Verify the first vector values in 'vectors' match expected values
+    const float epsilon = 1e-5;
+    for (int i = 0; i < 100; i++) {
+        TEST_CHECK(std::abs(init_values[i] - vectors[0][i]) < epsilon);
+    }
 }
 
 // Test for vectors size
@@ -50,6 +50,32 @@ void test_vectors_size(void) {
 void test_vectors_dimension(void) {
     Vectors vectors(100, 0);  
     TEST_CHECK(vectors.dimension() == 3); 
+}
+
+void test_filter_indeces(void) {
+    Vectors vectors(50, 0);
+
+    const int odd[] = {
+        1, 3, 5, 7, 9, 11, 13, 15, 17, 19,
+        21, 23, 25, 27, 29, 31, 33, 35, 37, 39,
+        41, 43, 45, 47, 49
+    };
+
+    std::unordered_set<int> zero_filter = vectors.filter_indeces(1);
+    for (int i = 0 ; i < 25 ; i++) {
+        TEST_CHECK(zero_filter.find(odd[i]) != zero_filter.end());
+    }
+
+    const int even[] = {
+        0, 2, 4, 6, 8, 10, 12, 14, 16, 18,
+        20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
+        40, 42, 44, 46, 48, 50
+    };
+
+    std::unordered_set<int> one_filter = vectors.filter_indeces(0);
+    for (int i = 0 ; i < 25 ; i++) {
+        TEST_CHECK(one_filter.find(even[i]) != one_filter.end());
+    }
 }
 
 // Test for Vectors read queries
@@ -103,6 +129,7 @@ TEST_LIST = {
     { "test_vectors_constructor", test_vectors_constructor },
     { "test_vectors_size", test_vectors_size},
     { "test_vectors_dimension", test_vectors_dimension},
+    { "test_filter_indeces", test_filter_indeces},
     { "test_vectors_read_queries", test_vectors_read_queries},
     { "test_vectors_same_filter", test_vectors_same_filter},
     { "test_vectors_euclidean_distance", test_vectors_euclidean_distance },

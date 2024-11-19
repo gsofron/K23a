@@ -7,12 +7,15 @@
 #include <fstream>
 #include <string>
 #include <cstring>
+#include <unordered_set>
+#include <unordered_map>
 
 class Vectors {
 private:
-    float **vectors;                // Stores all vectors
+    float **vectors;             // Stores all vectors
     float **dist_matrix;        // Cache for Euclidean distances
     float *filters;             // Store all filters
+    std::unordered_map<float, std::unordered_set<int>> filters_map; // Stores for every filter the indeces they have it
     int base_size;              // Number of vectors
     int dimention;              // Dimension of each vector
     int queries;                // Number of queries
@@ -30,7 +33,11 @@ public:
     int dimension() const { return dimention; }
     float* operator[](int index) const { return vectors[index]; }
 
-    bool same_filter(int index1, int index2); // Check if these two vectors has the same filter
+    // Return all the indeces that has the given filter
+    std::unordered_set<int> filter_indeces(float filter);
+
+    // Check if these two vectors has the same filter
+    bool same_filter(int index1, int index2); 
 
     // Calculate Euclidean distance between two vectors
     float euclidean_distance(int index1, int index2) const;

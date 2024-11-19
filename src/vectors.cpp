@@ -23,6 +23,7 @@ Vectors::Vectors(const std::string& file_name, int vectors_dimention, int num_re
 
     while (base_size < max_vectors && file) {
         if (!file.read(reinterpret_cast<char*>(&filters[base_size]), sizeof(float))) break;
+        filters_map[filters[base_size]].insert(filters[base_size]);
 
         // Ignore the timestamp value
         file.seekg(sizeof(float), std::ios::cur);
@@ -56,6 +57,7 @@ Vectors::Vectors(int num_vectors, int queries_num)
         vectors[i] = new float[dimention];
         dist_matrix[i] = new float[base_size]();
         filters[i] = i % 2;
+        filters_map[filters[i]].insert(i);
         for (int j = 0; j < dimention; j++) {
             vectors[i][j] = static_cast<float>(i * 3 + (j + 1)); 
         }
@@ -77,6 +79,11 @@ Vectors::~Vectors() {
     delete[] vectors;
     delete[] dist_matrix;
     delete[] filters;
+}
+
+// Return all the indeces that has the given filter
+std::unordered_set<int> Vectors::filter_indeces(float filter) {
+    return filters_map[filter];
 }
 
 bool Vectors::same_filter(int index1, int index2) {
