@@ -52,4 +52,7 @@ public:
 
     // Add a new query vector (only for testing)
     void add_query(float *values); 
+
+    // find_medoid() needs access to Vector's private members
+    friend std::unordered_map<float, int> *find_medoid(const Vectors &vectors, int threshold);
 }; 
