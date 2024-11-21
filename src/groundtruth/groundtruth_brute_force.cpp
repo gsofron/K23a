@@ -8,10 +8,7 @@
 #include "vectors.hpp"
 
 // Write the true top k nearest neighbors to the file
-void write_true_knn(std::ofstream &groundtruth_file, Vectors &vectors, int data_vecs_num, int query_array_index, int query_bin_index) {
-    // Write the index of the query in the .bin file first
-    groundtruth_file.write(reinterpret_cast<const char*>(&query_bin_index), sizeof(query_bin_index));
-
+void write_true_knn(std::ofstream &groundtruth_file, Vectors &vectors, int data_vecs_num, int query_array_index) {
     // Save the pair (euclidean distance, index) of all neighbors in ascending eclidean distance
     std::set<std::pair<float, int>> s;
     for (int i = 0 ; i < data_vecs_num ; i++) {
@@ -66,22 +63,17 @@ int main(int argc, char *argv[]) {
     Vectors vectors(argv[1], VEC_DIMENSION, data_vecs_num, query_vecs_num);
     vectors.read_queries(argv[2], query_vecs_num);
     
-    // Create output file and write K
+    // Create output file
     std::ofstream groundtruth_file(argv[3], std::ios::binary);
     if (!groundtruth_file) throw std::runtime_error("Error opening file: " + (std::string)argv[3]);
-    int k = K;
-    groundtruth_file.write(reinterpret_cast<const char*>(&k), sizeof(k));
 
     // Since Vectors class doesn't save queries that contain timestamp, save the number of valid queries
     // and use it as an offset for euclidean_distance_cached()
     int count = 0;    
-    int query_bin_index = -1;   // Index of current query in queries.bin
 
     // Read all vectors. Query vectors have dimension of 104
     std::vector<float> buff(104);
     while (queries_file.read((char *)buff.data(), 104 * sizeof(float))) {
-        query_bin_index++;
-
         // Read a whole vector and save it to 'row'
         std::vector<float> row(104);
         for (int d = 0; d < 104; d++) {
@@ -91,7 +83,7 @@ int main(int argc, char *argv[]) {
         if (row[0] > 1) continue;   // Ignore timestamp queries
 
         // Write the actual nearest neighbors
-        write_true_knn(groundtruth_file, vectors, data_vecs_num, data_vecs_num + count, query_bin_index);
+        write_true_knn(groundtruth_file, vectors, data_vecs_num, data_vecs_num + count);
         count++;
     }
 
