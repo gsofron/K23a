@@ -32,7 +32,7 @@ groundtruth:
 clean:
 	@$(MAKE) -C src clean
 	@$(MAKE) -C tests clean
-	@rm -r $(BUILD_DIR)
-	@rm groundtruth
+	@rm -rf $(BUILD_DIR)
+	@rm -f groundtruth
 
 .PHONY: all main tests clean
