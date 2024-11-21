@@ -208,12 +208,8 @@ std::vector<int> Vectors::query_solutions(const std::string& file_name, int quer
     std::ifstream file(file_name, std::ios::binary);
     if (!file) throw std::runtime_error("Error opening file: " + file_name);
 
-    int dimension;
-    if (!file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) {
-        throw std::runtime_error("Error reading vector dimension from file.");
-    }
-
-    long start_byte = (query_index * ((dimension + 1) * sizeof(int))) + sizeof(int);
+    int dimension = 100;
+    long start_byte = query_index * (100 * sizeof(int));
     file.seekg(start_byte, std::ios::beg);
     if (!file) throw std::runtime_error("Error seeking to required byte position.");
 

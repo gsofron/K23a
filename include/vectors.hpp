@@ -34,7 +34,7 @@ public:
     float* operator[](int index) const { return vectors[index]; }
 
     // Return all the indeces that has the given filter
-    std::unordered_set<int> filter_indeces(float filter);
+    const std::unordered_set<int>& filter_indeces(float filter);
 
     // Check if these two vectors has the same filter
     bool same_filter(int index1, int index2); 
