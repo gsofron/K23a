@@ -1,4 +1,4 @@
-#define VEC_DIMENSION 128
+#define VEC_DIMENSION 100
 #define K 100
 
 #include <cstdlib>     
@@ -15,7 +15,7 @@
 #include "vectors.hpp"
 
 // Execution examples
-// time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -a 1.1 -l 150 -r 100 -t 50 -i -1
+// time ./k23a -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g siftsmall/siftsmall_groundtruth.ivecs -a 1.1 -l 150 -r 100 -t 50 -i -1
 // time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -s vamana.bin -a 1.1 -l 150 -r 100 -t 50 -i -1
 // time ./k23a -b siftsmall/siftsmall_base.fvecs -q siftsmall/siftsmall_query.fvecs -g siftsmall/siftsmall_groundtruth.ivecs -v vamana.bin -s new.bin -a 1.1 -l 150 -r 100 -t 50 -i -1
 
@@ -162,14 +162,14 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));  // Seed for randomization
 
     // Initialize parameters and parse command line input
-    int base_vectors = 10000, queries_vectors = 100, L, R, t, index;
+    int base_vectors = 10000, queries_vectors = 10000, L, R, t, index;
     float a;
     std::string base_file, query_file, groundtruth_file, vamana_file = "", save_file = "";
     parse_parameters(argc, argv, queries_vectors, base_file, query_file, groundtruth_file, vamana_file, save_file, a, L, R, t, index);
 
     // Load vectors
     int read_vectors;
-    Vectors<float> vectors(base_file, read_vectors, base_vectors, queries_vectors);
+    Vectors vectors(base_file, VEC_DIMENSION, base_vectors, queries_vectors);
     vectors.read_queries(query_file, queries_vectors);
 
     DirectedGraph *g;
@@ -182,16 +182,14 @@ int main(int argc, char *argv[]) {
     if (index == -1) {
         int mismatch_count = 0;
         for (int j = 0; j < queries_vectors; j++) {
-            auto result = GreedySearch(*g, vectors, 0, j + base_vectors, K, L);
+            auto result = FilteredGreedySearch(*g, vectors, 0, j + base_vectors, K, L);
             auto groundtruth = vectors.query_solutions(groundtruth_file, j);
             mismatch_count += findDifference(groundtruth, result.first).size();
         }
         std::cout << "Recall: " << (static_cast<float>((K * queries_vectors) - mismatch_count) / (K * queries_vectors)) << std::endl;
     }
-    // User wants to calculate a single recall
-    // NOTE: Since we check if index is valid during parse_parameters(), we are always in bounds for GreedySearch()
     else {
-        auto result = GreedySearch(*g, vectors, 0, index + base_vectors, K, L);
+        auto result = FilteredGreedySearch(*g, vectors, 0, index + base_vectors, K, L);
         auto groundtruth = vectors.query_solutions(groundtruth_file, index);
         std::vector<int> difference = findDifference(groundtruth, result.first);
         std::cout << "Recall: " << (static_cast<float>(K - difference.size()) / K) << std::endl;

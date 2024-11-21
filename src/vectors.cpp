@@ -82,12 +82,12 @@ Vectors::~Vectors() {
 }
 
 // Return all the indeces that has the given filter
-std::unordered_set<int> Vectors::filter_indeces(float filter) {
+const std::unordered_set<int>& Vectors::filter_indeces(float filter) {
     return filters_map[filter];
 }
 
 bool Vectors::same_filter(int index1, int index2) {
-    return ((filters[index1] == filters[index2]) || filters[index1] == -1);
+    return ((filters[index1] == filters[index2]) || filters[index1] == -1 || filters[index2] == -1);
 }
 
 // Calculate Euclidean distance and update cache
@@ -154,6 +154,75 @@ void Vectors::read_queries(const std::string& file_name, int read_num) {
         num_read_vectors++;
     }
     file.close();
+}
+
+// Load the query of the given index from a file
+bool Vectors::read_query(const std::string& file_name, int index) {
+    std::ifstream file(file_name, std::ios::binary);
+    if (!file) throw std::runtime_error("Error opening file: " + file_name);
+    
+    int queries_num;
+    if (!file.read(reinterpret_cast<char*>(&queries_num), sizeof(int))) return false;
+    if (index < queries_num) {
+        file.seekg((104 * index)*sizeof(float), std::ios::cur);
+    } else {
+        return false;
+    }
+
+    float type;
+    if (!file.read(reinterpret_cast<char*>(&type), sizeof(float))) return false;
+    if (type > 1) { // Ignore it if it is a timestamp query
+        return false;
+    }
+
+    if (!file.read(reinterpret_cast<char*>(&filters[base_size]), sizeof(float))) return false;
+
+    // Ignore the timestamp related values
+    file.seekg(2*sizeof(float), std::ios::cur);
+
+    // Read the queries' values
+    vectors[base_size] = new float[dimention];
+    dist_matrix[base_size] = new float[base_size]();
+    if (!file.read(reinterpret_cast<char*>(vectors[base_size]), dimention * sizeof(float))) {
+        throw std::runtime_error("Error reading vector data from file");
+    }
+
+    if (!type) { // Initialise euclidean distance from query to every other base vector 
+        for (int i = 0 ; i < base_size ; i++) {
+            dist_matrix[base_size][i] = euclidean_distance(base_size, i);
+        }
+    } else { // Initialise the euclidean distance from the query to every other vector that has the same filter
+        for (int i = 0 ; i < base_size ; i++) {
+            if (filters[base_size] == filters[i]) {
+                dist_matrix[base_size][i] = euclidean_distance(base_size, i);
+            }
+        }
+    }
+    
+    file.close();
+    return true;
+}
+
+// Return the indices of the k-nearest neighboors of the given index 
+std::vector<int> Vectors::query_solutions(const std::string& file_name, int query_index) {
+    std::ifstream file(file_name, std::ios::binary);
+    if (!file) throw std::runtime_error("Error opening file: " + file_name);
+
+    int dimension;
+    if (!file.read(reinterpret_cast<char*>(&dimension), sizeof(int))) {
+        throw std::runtime_error("Error reading vector dimension from file.");
+    }
+
+    long start_byte = (query_index * ((dimension + 1) * sizeof(int))) + sizeof(int);
+    file.seekg(start_byte, std::ios::beg);
+    if (!file) throw std::runtime_error("Error seeking to required byte position.");
+
+    std::vector<int> solution_indices(dimension);
+    if (!file.read(reinterpret_cast<char*>(solution_indices.data()), dimension * sizeof(int))) {
+        throw std::runtime_error("Error reading solution indices from file.");
+    }
+    file.close();
+    return solution_indices;
 }
 
 // Add a single query vector and update distance cache
