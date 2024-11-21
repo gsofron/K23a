@@ -107,6 +107,61 @@ void test_vectors_read_queries(void) {
     }
 }
 
+// Test for Vectors read query
+void test_vectors_read_query(void) {
+    Vectors vectors("dummy/dummy-data.bin", 100, 100, 1);  // Initialize Vectors from file
+    bool valid = vectors.read_query("dummy/dummy-queries.bin", 0);
+
+    TEST_CHECK(valid == true);
+
+    // Expected values for the first query vector
+    const float init_values[] = {
+        0.0892586, -0.150291, -0.821048, 0.344949, -0.589355, 0.944352, -0.667804,
+        0.305992, -2.13121, 1.73406, -0.949898, 2.06183, 0.537979, 0.328789, -0.0176721,
+        -0.562069, -0.621625, 0.840873, 0.591859, 0.275412, 0.937918, -0.0616842,
+        0.809946, -1.05696, 1.19051, -0.0321672, -0.369298, 0.679628, -1.07731, 0.390322,
+        -0.454751, -0.32243, -0.615295, 1.18967, 0.721884, 0.104513, -0.0959466, 0.0282482,
+        0.0742209, 0.341131, 0.257043, 0.0100733, -0.0585112, -0.417733, -0.613679, 
+        0.805337, -0.203679, 0.155731, 0.184432, -0.253783, 0.399551, 0.321999, 
+        -0.440549, -0.303851, 0.0522588, 0.177387, 0.334058, 0.197412, 0.00448788, 
+        0.990222, 0.494329, -0.448112, 0.206554, -0.730439, 0.170579, 0.0226756, 
+        0.0322761, 0.00679316, -0.324175, -0.556499, 0.353944, -0.355755, -0.542616, 
+        -0.244421, 0.439767, -0.309919, -0.0356684, 0.200207, -0.387314, -0.357522, 
+        0.0969972, 0.615141, 0.361333, 0.208315, 0.0530467, 0.395783, 0.294819, 
+        0.558363, -0.487409, 0.526882, 0.497473, 0.17107, 0.0201734, -0.179488, 
+        0.0901327, -0.490539, -0.358719, -0.236438, 0.0852151, -0.542886
+    };
+
+    const float epsilon = 1e-5;
+    for (int i = 0; i < 100; i++) {
+        TEST_CHECK(std::abs(init_values[i] - vectors[100][i]) < epsilon);
+    }
+}
+
+// Test for Vectors query solutions
+void test_vectors_query_solutions(void) {
+    Vectors vectors("dummy/dummy-data.bin", 100, 100, 0);  // Initialize Vectors from file
+
+    // Expected values for the solutions
+    const int valid_solutions[] = {
+        4073, 676, 5076, 4966, 9309, 231, 2733, 3672, 2715, 4307, 2434, 2307, 
+        8774, 8150, 9408, 8750, 7783, 6868, 6004, 9486, 8964, 3241, 3996, 764, 
+        161, 423, 6740, 2978, 3015, 5460, 7741, 4408, 44, 296, 9574, 2748, 
+        8734, 2780, 5779, 3531, 2650, 6448, 8832, 2974, 8181, 682, 1974, 1059, 
+        5914, 6917, 8879, 5130, 7981, 982, 7802, 4299, 6367, 9153, 6585, 779, 
+        3393, 9647, 856, 2853, 8801, 9069, 5192, 793, 2679, 9962, 7286, 8663, 
+        1142, 2672, 3721, 5223, 4978, 2036, 6200, 5657, 712, 3548, 5729, 4696, 
+        6952, 5362, 7258, 9989, 4974, 994, 9083, 714, 7744, 7043, 7063, 4146, 
+        4632, 8490, 8422, 8855
+    };
+
+    std::vector<int> solutions = vectors.query_solutions("dummy/dummy-groundtruth.bin", 3);
+
+    for (int i = 0 ; i < 100 ; i++) {
+        TEST_CHECK(solutions[i] == valid_solutions[i]);
+    }
+}
+
 // Test vectors same_filter
 void test_vectors_same_filter(void) {
     Vectors vectors(100, 0);  
@@ -131,6 +186,8 @@ TEST_LIST = {
     { "test_vectors_dimension", test_vectors_dimension},
     { "test_filter_indeces", test_filter_indeces},
     { "test_vectors_read_queries", test_vectors_read_queries},
+    { "test_vectors_read_query", test_vectors_read_query},
+    { "test_vectors_query_solutions", test_vectors_query_solutions},
     { "test_vectors_same_filter", test_vectors_same_filter},
     { "test_vectors_euclidean_distance", test_vectors_euclidean_distance },
     { NULL, NULL } 

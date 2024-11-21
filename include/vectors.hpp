@@ -34,7 +34,7 @@ public:
     float* operator[](int index) const { return vectors[index]; }
 
     // Return all the indeces that has the given filter
-    std::unordered_set<int> filter_indeces(float filter);
+    const std::unordered_set<int>& filter_indeces(float filter);
 
     // Check if these two vectors has the same filter
     bool same_filter(int index1, int index2); 
@@ -49,6 +49,12 @@ public:
 
     // Load queries from a file
     void read_queries(const std::string& file_name, int read_num); 
+
+    // Load the query of the given index from a file
+    bool read_query(const std::string& file_name, int index); 
+
+    // Return the indices of the k-nearest neighboors of the given index
+    std::vector<int> query_solutions(const std::string& file_name, int query_index);
 
     // Add a new query vector (only for testing)
     void add_query(float *values); 
