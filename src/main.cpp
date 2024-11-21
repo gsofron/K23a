@@ -193,38 +193,34 @@ int main(int argc, char *argv[]) {
     std::string base_file, query_file, groundtruth_file, vamana_file = "", save_file = "";
     parse_parameters(argc, argv, base_file, query_file, groundtruth_file, vamana_file, save_file, base_vectors_num, query_vectors_num, a, L, R, t, index);
 
-    // // Load vectors
-    // int read_vectors;
-    // Vectors<float> vectors(base_file, read_vectors, base_vectors, queries_vectors);
-    // vectors.read_queries(query_file, queries_vectors);
+    // Load base and queries vectors
+    Vectors<float> vectors(base_file, read_vectors, base_vectors_num, queries_vectors_num);
+    vectors.read_queries(query_file, queries_vectors_num);
 
-    // DirectedGraph *g;
+    DirectedGraph *g;
 
-    // // If user gave vamana file, use it to initialize the graph
-    // if (!vamana_file.empty()) g = read_vamana_from_file(vamana_file);
-    // else g = vamana(vectors, a, L, R);
+    // If user gave vamana file, use it to initialize the graph
+    if (!vamana_file.empty()) g = read_vamana_from_file(vamana_file);
+    else g = vamana(vectors, a, L, R);
 
-    // // User wants to calculate total recall
-    // if (index == -1) {
-    //     int mismatch_count = 0;
-    //     for (int j = 0; j < queries_vectors; j++) {
-    //         auto result = GreedySearch(*g, vectors, 0, j + base_vectors, K, L);
-    //         auto groundtruth = vectors.query_solutions(groundtruth_file, j);
-    //         mismatch_count += findDifference(groundtruth, result.first).size();
-    //     }
-    //     std::cout << "Recall: " << (static_cast<float>((K * queries_vectors) - mismatch_count) / (K * queries_vectors)) << std::endl;
-    // }
-    // // User wants to calculate a single recall
-    // // NOTE: Since we check if index is valid during parse_parameters(), we are always in bounds for GreedySearch()
-    // else {
-    //     auto result = GreedySearch(*g, vectors, 0, index + base_vectors, K, L);
-    //     auto groundtruth = vectors.query_solutions(groundtruth_file, index);
-    //     std::vector<int> difference = findDifference(groundtruth, result.first);
-    //     std::cout << "Recall: " << (static_cast<float>(K - difference.size()) / K) << std::endl;
-    // }
+    // User wants to calculate total recall
+    if (index == -1) {
+        int mismatch_count = 0;
+        for (int j = 0; j < queries_vectors_num; j++) {
+            auto result = GreedySearch(*g, vectors, 0, j + base_vectors, K, L);
+            auto groundtruth = vectors.query_solutions(groundtruth_file, j);
+            mismatch_count += findDifference(groundtruth, result.first).size();
+        }
+        std::cout << "Recall: " << (static_cast<float>((K * queries_vectors) - mismatch_count) / (K * queries_vectors)) << std::endl;
+    } else {
+        auto result = GreedySearch(*g, vectors, 0, base_vectors_num, K, L);
+        auto groundtruth = vectors.query_solutions(groundtruth_file, index);
+        std::vector<int> difference = findDifference(groundtruth, result.first);
+        std::cout << "Recall: " << (static_cast<float>(K - difference.size()) / K) << std::endl;
+    }
 
-    // // Check if user wants to save the graph
-    // if (!save_file.empty()) write_vamana_to_file(*g, save_file);
+    // Check if user wants to save the graph
+    if (!save_file.empty()) write_vamana_to_file(*g, save_file);
 
     // delete g;
     return 0;
