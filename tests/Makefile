@@ -32,7 +32,7 @@ all: ../directed_graph_test ../vectors_test \
 ../vamana_test: $(BUILD_DIR)/vamana_test.o $(BUILD_DIR)/directed_graph.o $(BUILD_DIR)/vamana.o $(BUILD_DIR)/vectors.o $(BUILD_DIR)/robust_prune.o $(BUILD_DIR)/greedy_search.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-../findmedoid_test: $(BUILD_DIR)/findmedoid_test.o $(BUILD_DIR)/findmedoid.o
+../findmedoid_test: $(BUILD_DIR)/findmedoid_test.o $(BUILD_DIR)/findmedoid.o $(BUILD_DIR)/vectors.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(BUILD_DIR)/%.o: $(TEST_DIR)/%.cpp
