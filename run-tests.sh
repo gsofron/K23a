@@ -9,6 +9,4 @@
 ./robust_prune_test
 ./filtered_robust_prune_test
 ./vamana_test
-
-# To run with `valgrind` execute:
-# valgrind --trace-children=yes ./run-tests.sh
+./findmedoid_test
