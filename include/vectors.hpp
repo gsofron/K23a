@@ -14,13 +14,14 @@ class Vectors {
 private:
     float **vectors;             // Stores all vectors
     float **dist_matrix;        // Cache for Euclidean distances
-    float *filters;             // Store all filters
-    std::unordered_map<float, std::unordered_set<int>> filters_map; // Stores for every filter the indeces they have it
     int base_size;              // Number of vectors
     int dimention;              // Dimension of each vector
     int queries;                // Number of queries
 
 public:
+    float *filters;             // Store all filters
+    std::unordered_map<float, std::unordered_set<int>> filters_map; // Stores for every filter the indeces they have it
+
     // Load vectors from a file
     Vectors(const std::string& file_name, int vectors_dimention, int num_read_vectors, int queries_num);
 
@@ -33,11 +34,10 @@ public:
     int dimension() const { return dimention; }
     float* operator[](int index) const { return vectors[index]; }
 
-    // Return all the indeces that has the given filter
-    const std::unordered_set<int>& filter_indeces(float filter);
-
     // Check if these two vectors has the same filter
-    bool same_filter(int index1, int index2); 
+    bool same_filter(int index1, int index2) {
+        return ((filters[index1] == filters[index2]) || filters[index1] == -1 || filters[index2] == -1);
+    }
 
     // Calculate Euclidean distance between two vectors
     float euclidean_distance(int index1, int index2) const;
@@ -58,7 +58,4 @@ public:
 
     // Add a new query vector (only for testing)
     void add_query(float *values); 
-
-    // find_medoid() needs access to Vector's private members
-    friend std::unordered_map<float, int> *find_medoid(const Vectors &vectors, int threshold);
 }; 
