@@ -25,10 +25,9 @@ void test_filtered_greedy_search(void) {
     
     int k = 5;                    // Number of nearest neighbors to retrieve
     unsigned long L = 10;        // Maximum allowed search steps
-    int starts[] = {0, 1, 2};
 
     // Execute GreedySearch and store the result
-    auto result = FilteredGreedySearch(graph, vectors, starts, 3, 1000, k, L);
+    auto result = FilteredGreedySearch(graph, vectors, 0, 1000, k, L);
 
     // Check results' validity
     TEST_CHECK(result.first[0] == 666);

@@ -52,32 +52,6 @@ void test_vectors_dimension(void) {
     TEST_CHECK(vectors.dimension() == 3); 
 }
 
-void test_filter_indeces(void) {
-    Vectors vectors(50, 0);
-
-    const int odd[] = {
-        1, 3, 5, 7, 9, 11, 13, 15, 17, 19,
-        21, 23, 25, 27, 29, 31, 33, 35, 37, 39,
-        41, 43, 45, 47, 49
-    };
-
-    std::unordered_set<int> zero_filter = vectors.filter_indeces(1);
-    for (int i = 0 ; i < 25 ; i++) {
-        TEST_CHECK(zero_filter.find(odd[i]) != zero_filter.end());
-    }
-
-    const int even[] = {
-        0, 2, 4, 6, 8, 10, 12, 14, 16, 18,
-        20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
-        40, 42, 44, 46, 48, 50
-    };
-
-    std::unordered_set<int> one_filter = vectors.filter_indeces(0);
-    for (int i = 0 ; i < 25 ; i++) {
-        TEST_CHECK(one_filter.find(even[i]) != one_filter.end());
-    }
-}
-
 // Test for Vectors read queries
 void test_vectors_read_queries(void) {
     Vectors vectors("dummy/dummy-data.bin", 100, 100, 100);  // Initialize Vectors from file
@@ -184,7 +158,6 @@ TEST_LIST = {
     { "test_vectors_constructor", test_vectors_constructor },
     { "test_vectors_size", test_vectors_size},
     { "test_vectors_dimension", test_vectors_dimension},
-    { "test_filter_indeces", test_filter_indeces},
     { "test_vectors_read_queries", test_vectors_read_queries},
     { "test_vectors_read_query", test_vectors_read_query},
     { "test_vectors_query_solutions", test_vectors_query_solutions},

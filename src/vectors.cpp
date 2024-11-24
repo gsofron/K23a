@@ -81,15 +81,6 @@ Vectors::~Vectors() {
     delete[] filters;
 }
 
-// Return all the indeces that has the given filter
-const std::unordered_set<int>& Vectors::filter_indeces(float filter) {
-    return filters_map[filter];
-}
-
-bool Vectors::same_filter(int index1, int index2) {
-    return ((filters[index1] == filters[index2]) || filters[index1] == -1 || filters[index2] == -1);
-}
-
 // Calculate Euclidean distance and update cache
 float Vectors::euclidean_distance(int index1, int index2) const {
     float sum = 0.0, diff;

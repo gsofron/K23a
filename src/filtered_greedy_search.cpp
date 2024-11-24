@@ -5,7 +5,7 @@
 #include "greedy_search.hpp"
 
 std::pair<std::vector<int>, std::set<std::pair<float, int>>> 
-FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int *starts, int starts_num, int query, int k, int L) {
+FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int start, int query, int k, int L) {
     size_t vectors_size = vectors.size();
 
     // Initialize result set and visited marker array
@@ -13,13 +13,11 @@ FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int *starts, int st
     bool *visited = new bool[vectors_size];
     std::fill(visited, visited + vectors_size, false);
 
-    // Insert to L_set the filter compatible start indeces
-    for (int i = 0 ; i < starts_num ; i++) {
-        if (vectors.same_filter(query, starts[i])) {
-            L_set.insert({vectors.euclidean_distance_cached(query, starts[i]), starts[i]});
-        }
-    }  
-  
+    // Insert to L_set the start node if it has the same filter with the query
+    if (vectors.same_filter(query, start)) {
+        L_set.insert({vectors.euclidean_distance_cached(query, start), start});
+    }
+
     // Main search loop
     while (true) {
         // Find first unvisited node in L_set
