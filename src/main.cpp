@@ -8,6 +8,7 @@
 #include <string>      
 #include <unistd.h>     
 
+#include "filtered_greedy_search.hpp"
 #include "directed_graph.hpp"
 #include "robust_prune.hpp"
 #include "utils.hpp"
@@ -194,8 +195,8 @@ int main(int argc, char *argv[]) {
     parse_parameters(argc, argv, base_file, query_file, groundtruth_file, vamana_file, save_file, base_vectors_num, query_vectors_num, a, L, R, t, index);
 
     // Load base and queries vectors
-    Vectors<float> vectors(base_file, read_vectors, base_vectors_num, queries_vectors_num);
-    vectors.read_queries(query_file, queries_vectors_num);
+    Vectors vectors(base_file, 100, base_vectors_num, query_vectors_num);
+    vectors.read_queries(query_file, query_vectors_num);
 
     DirectedGraph *g;
 
@@ -206,14 +207,14 @@ int main(int argc, char *argv[]) {
     // User wants to calculate total recall
     if (index == -1) {
         int mismatch_count = 0;
-        for (int j = 0; j < queries_vectors_num; j++) {
-            auto result = GreedySearch(*g, vectors, 0, j + base_vectors, K, L);
+        for (int j = 0; j < query_vectors_num; j++) {
+            auto result = FilteredGreedySearch(*g, vectors, 0, j + base_vectors_num, K, L);
             auto groundtruth = vectors.query_solutions(groundtruth_file, j);
             mismatch_count += findDifference(groundtruth, result.first).size();
         }
-        std::cout << "Recall: " << (static_cast<float>((K * queries_vectors) - mismatch_count) / (K * queries_vectors)) << std::endl;
+        std::cout << "Recall: " << (static_cast<float>((K * query_vectors_num) - mismatch_count) / (K * query_vectors_num)) << std::endl;
     } else {
-        auto result = GreedySearch(*g, vectors, 0, base_vectors_num, K, L);
+        auto result = FilteredGreedySearch(*g, vectors, 0, base_vectors_num, K, L);
         auto groundtruth = vectors.query_solutions(groundtruth_file, index);
         std::vector<int> difference = findDifference(groundtruth, result.first);
         std::cout << "Recall: " << (static_cast<float>(K - difference.size()) / K) << std::endl;
@@ -222,6 +223,6 @@ int main(int argc, char *argv[]) {
     // Check if user wants to save the graph
     if (!save_file.empty()) write_vamana_to_file(*g, save_file);
 
-    // delete g;
+    delete g;
     return 0;
 }
