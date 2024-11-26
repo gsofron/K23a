@@ -10,3 +10,4 @@
 ./filtered_robust_prune_test
 ./vamana_test
 ./findmedoid_test
+./filtered_vamana_test
