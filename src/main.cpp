@@ -214,7 +214,11 @@ int main(int argc, char *argv[]) {
         }
         std::cout << "Recall: " << (static_cast<float>((K * query_vectors_num) - mismatch_count) / (K * query_vectors_num)) << std::endl;
     } else {
-        auto result = FilteredGreedySearch(*g, vectors, 0, base_vectors_num, K, L);
+        if (index >= query_vectors_num) {
+            std::cout << "Invalid query index." << std::endl;
+            return;
+        }
+        auto result = FilteredGreedySearch(*g, vectors, 0, base_vectors_num + index, K, L);
         auto groundtruth = vectors.query_solutions(groundtruth_file, index);
         std::vector<int> difference = findDifference(groundtruth, result.first);
         std::cout << "Recall: " << (static_cast<float>(K - difference.size()) / K) << std::endl;
