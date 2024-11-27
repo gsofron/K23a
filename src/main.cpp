@@ -1,6 +1,7 @@
 #define VEC_DIMENSION 100
 #define K 100
 
+#include <algorithm>
 #include <cstdlib>     
 #include <ctime>        
 #include <fstream>      
@@ -8,17 +9,19 @@
 #include <string>      
 #include <unistd.h>     
 
-#include "filtered_greedy_search.hpp"
 #include "directed_graph.hpp"
+#include "filtered_greedy_search.hpp"
+#include "filtered_vamana.hpp"
+#include "findmedoid.hpp"
 #include "robust_prune.hpp"
 #include "utils.hpp"
 #include "vamana.hpp"
 #include "vectors.hpp"
 
 // Execution examples
-// time ./k23a -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -n 10000 -m 10000 -a 1.1 -l 150 -r 100 -t 50 -i -1
-// time ./k23a -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -s vamana.bin -n 10000 -m 10000 -a 1.1 -l 150 -r 100 -t 50 -i -1
-// time ./k23a -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -v vamana.bin -s new.bin -n 10000 -m 10000 -a 1.1 -l 150 -r 100 -t 50 -i -1
+// time ./k23a -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -n 10000 -m 5012 -a 1.1 -l 150 -r 100 -t 50 -i -1
+// time ./k23a -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -s vamana.bin -n 10000 -m 5012 -a 1.1 -l 150 -r 100 -t 50 -i -1
+// time ./k23a -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -v vamana.bin -s new.bin -n 10000 -m 5012 -a 1.1 -l 150 -r 100 -t 50 -i -1
 
 void print_usage() {
     std::cerr << "Usage: " << std::endl;
@@ -174,14 +177,12 @@ void parse_parameters(int argc, char *argv[], std::string &base_file, std::strin
 }
 
 // Helper function to find elements in `a` not in `b`
-std::vector<int> findDifference(const std::vector<int>& a, const std::vector<int>& b) {
-    std::unordered_set<int> setB(b.begin(), b.end());
-    std::vector<int> result;
-
-    for (int num : a) {
-        if (!setB.count(num)) result.push_back(num);
+int intersect(const std::vector<int>& vec1, const std::vector<int>& vec2) {
+    int count = 0;
+    for (auto i : vec1) {
+        if (std::find(vec2.begin(), vec2.end(), i) != vec2.end()) count++;
     }
-    return result;
+    return count;
 }
 
 // Main execution and menu
@@ -195,33 +196,61 @@ int main(int argc, char *argv[]) {
     parse_parameters(argc, argv, base_file, query_file, groundtruth_file, vamana_file, save_file, base_vectors_num, query_vectors_num, a, L, R, t, index);
 
     // Load base and queries vectors
-    Vectors vectors(base_file, 100, base_vectors_num, query_vectors_num);
+    Vectors vectors(base_file, VEC_DIMENSION, base_vectors_num, query_vectors_num);
     vectors.read_queries(query_file, query_vectors_num);
 
     DirectedGraph *g;
 
     // If user gave vamana file, use it to initialize the graph
     if (!vamana_file.empty()) g = read_vamana_from_file(vamana_file);
-    else g = vamana(vectors, a, L, R);
+    else g = filtered_vamana(vectors, a, L, R, t);
 
     // User wants to calculate total recall
+    auto *M = find_medoid(vectors, t);
     if (index == -1) {
-        int mismatch_count = 0;
-        for (int j = 0; j < query_vectors_num; j++) {
-            auto result = FilteredGreedySearch(*g, vectors, 0, j + base_vectors_num, K, L);
+        int count = 0;
+        float recall_sum = 0.0;
+        
+        for (int j = 0; j < query_vectors_num; j++) { 
+            float filter = vectors.filters[j + base_vectors_num];
+            if (filter == 144 || filter == -1) continue;
+  
+            count++;
+            int start = M->at(filter);
+
+
+            auto L_set = FilteredGreedySearch(*g, vectors, start, j+base_vectors_num, K, L).first;
+
             auto groundtruth = vectors.query_solutions(groundtruth_file, j);
-            mismatch_count += findDifference(groundtruth, result.first).size();
+            std::sort(groundtruth.begin(), groundtruth.end());
+            while (groundtruth[0] == -1) groundtruth.erase(groundtruth.begin());
+            int groundtruth_count = groundtruth.size();
+
+            int common_count = intersect(groundtruth, L_set);
+
+            float current_recall = float(common_count) / groundtruth_count;
+            recall_sum += current_recall;
         }
-        std::cout << "Recall: " << (static_cast<float>((K * query_vectors_num) - mismatch_count) / (K * query_vectors_num)) << std::endl;
+        std::cout << "Calculated recall from " << count << " queries" << std::endl;
+        std::cout << "Total Recall Percent: " << 100*recall_sum/count << "%" << std::endl;
     } else {
+        float filter = vectors.filters[index + base_vectors_num];
+        int start = M->at(filter);
         if (index >= query_vectors_num) {
             std::cout << "Invalid query index." << std::endl;
-            return;
+            return 0;
         }
-        auto result = FilteredGreedySearch(*g, vectors, 0, base_vectors_num + index, K, L);
+        auto L_set = FilteredGreedySearch(*g, vectors, start, base_vectors_num + index, K, L).first;
+        
         auto groundtruth = vectors.query_solutions(groundtruth_file, index);
-        std::vector<int> difference = findDifference(groundtruth, result.first);
-        std::cout << "Recall: " << (static_cast<float>(K - difference.size()) / K) << std::endl;
+        std::sort(groundtruth.begin(), groundtruth.end());
+        while (groundtruth[0] == -1) groundtruth.erase(groundtruth.begin());
+        int groundtruth_count = groundtruth.size();
+
+        int common_count = intersect(groundtruth, L_set);
+
+        float current_recall = float(common_count) / groundtruth_count;
+        std::cout << "Current recall is: " << 100*current_recall << "%" << std::endl;
     }
 
     // Check if user wants to save the graph

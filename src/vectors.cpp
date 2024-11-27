@@ -23,7 +23,7 @@ Vectors::Vectors(const std::string& file_name, int vectors_dimention, int num_re
 
     while (base_size < max_vectors && file) {
         if (!file.read(reinterpret_cast<char*>(&filters[base_size]), sizeof(float))) break;
-        filters_map[filters[base_size]].insert(filters[base_size]);
+        filters_map[filters[base_size]].insert(base_size);
 
         // Ignore the timestamp value
         file.seekg(sizeof(float), std::ios::cur);
@@ -36,10 +36,14 @@ Vectors::Vectors(const std::string& file_name, int vectors_dimention, int num_re
 
         // Initialise the euclidean distances of all the vectors
         dist_matrix[base_size] = new float[max_vectors]();
-        for (int i = 0 ; i < base_size ; i++) {
-            euclidean_distance(base_size, i);
-        }
+        
         base_size++;
+    }
+
+    for (int i = 0; i < base_size; i++) {
+        for (int j = i + 1; j < base_size; j++) {
+            euclidean_distance(i, j);
+        }
     }
 
     file.close();
