@@ -19,9 +19,9 @@
 #include "vectors.hpp"
 
 // Execution examples
-// time ./k23a -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -n 10000 -m 5012 -a 1.1 -l 150 -r 100 -t 50 -i -1
-// time ./k23a -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -s vamana.bin -n 10000 -m 5012 -a 1.1 -l 150 -r 100 -t 50 -i -1
-// time ./k23a -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -v vamana.bin -s new.bin -n 10000 -m 5012 -a 1.1 -l 150 -r 100 -t 50 -i -1
+// time ./filtered -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -n 10000 -m 5012 -a 1.1 -l 150 -r 12 -t 50 -i -1
+// time ./filtered -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -s vamana.bin -n 10000 -m 5012 -a 1.1 -l 150 -r 12 -t 50 -i -1
+// time ./filtered -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -v vamana.bin -s new.bin -n 10000 -m 5012 -a 1.1 -l 150 -r 12 -t 50 -i -1
 
 void print_usage() {
     std::cerr << "Usage: " << std::endl;
@@ -193,17 +193,28 @@ int main(int argc, char *argv[]) {
     int base_vectors_num, query_vectors_num, L, R, t, index;
     float a;
     std::string base_file, query_file, groundtruth_file, vamana_file = "", save_file = "";
+
+    #ifdef FILTERED_VAMANA
     parse_parameters(argc, argv, base_file, query_file, groundtruth_file, vamana_file, save_file, base_vectors_num, query_vectors_num, a, L, R, t, index);
+    #else
+    // parse_parameters for stitched 
+    exit(EXIT_SUCCESS);
+    #endif
 
     // Load base and queries vectors
     Vectors vectors(base_file, VEC_DIMENSION, base_vectors_num, query_vectors_num);
     vectors.read_queries(query_file, query_vectors_num);
 
+    // Initialize graph g
     DirectedGraph *g;
-
     // If user gave vamana file, use it to initialize the graph
     if (!vamana_file.empty()) g = read_vamana_from_file(vamana_file);
+    #ifdef FILTERED_VAMANA
     else g = filtered_vamana(vectors, a, L, R, t);
+    #else
+    // else g = stitched();
+    else exit(EXIT_SUCCESS);
+    #endif
 
     // User wants to calculate total recall
     auto *M = find_medoid(vectors, t);
