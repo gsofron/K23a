@@ -4,17 +4,21 @@ MAKE += --silent
 
 BUILD_DIR := ./build
 
-all: main groundtruth tests
+all: filtered stitched groundtruth tests
 
-# Compilation of the main executable
-main:
+# Compilation of the filtered main executable
+filtered:
 	@mkdir -p $(BUILD_DIR)
-	@$(MAKE) -C src
+	@$(MAKE) -C src ../filtered
+
+# Compilation of the stitched main executable
+stitched:
+	@mkdir -p $(BUILD_DIR)
+	@$(MAKE) -C src ../stitched
 
 # Compilation of the groundtruth executable
 groundtruth:
 	@mkdir -p $(BUILD_DIR)
-	@mkdir -p $(BUILD_DIR)/groundtruth
 	@$(MAKE) -C src ../groundtruth
 
 # Tests compilation
@@ -28,4 +32,4 @@ clean:
 	@$(MAKE) -C tests clean
 	@rm -r $(BUILD_DIR)
 
-.PHONY: all main groundtruth tests clean
+.PHONY: all filtered stitched groundtruth tests clean
