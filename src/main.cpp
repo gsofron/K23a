@@ -94,8 +94,9 @@ int main(int argc, char *argv[]) {
         
         for (int j = 0; j < query_vectors_num; j++) { 
             float filter = vectors.filters[j + base_vectors_num];
-            if (filter == 144) continue;
-  
+            
+            if (filter != -1 && M->find(filter) == M->end()) continue;
+            
             count++;
 
             std::vector<int> L_set;
