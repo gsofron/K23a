@@ -8,6 +8,7 @@
 #include <iostream>     // std::cout
 #include <string>       // std::string
 #include <unistd.h>     // getopt()
+#include <iterator>
 
 #include "directed_graph.hpp"
 #include "filtered_greedy_search.hpp"
@@ -93,13 +94,30 @@ int main(int argc, char *argv[]) {
         
         for (int j = 0; j < query_vectors_num; j++) { 
             float filter = vectors.filters[j + base_vectors_num];
-            if (filter == 144 || filter == -1) continue;
+            if (filter == 144) continue;
   
             count++;
-            int start = M->at(filter);
 
+            std::vector<int> L_set;
+            if (filter > -1) {
+                int start = M->at(filter);
+                L_set = FilteredGreedySearch(*g, vectors, start, j+base_vectors_num, K, L).first;
+            } else {
+                std::set<std::pair<float, int>> all_medoids_knn;
+                for (auto pair : *M) {
+                    auto set = FilteredGreedySearch(*g, vectors, pair.second, j+base_vectors_num, K, L).second;
 
-            auto L_set = FilteredGreedySearch(*g, vectors, start, j+base_vectors_num, K, L).first;
+                    auto start = set.begin();
+                    auto end = set.begin();
+                    std::advance(end, std::min(K, static_cast<int>(set.size()))); 
+                    all_medoids_knn.insert(start, end);
+                }
+
+                auto it = all_medoids_knn.begin();
+                for (int i = 0; i < K && it != all_medoids_knn.end(); i++, it++) {
+                    L_set.push_back(it->second);
+                }
+            }
 
             auto groundtruth = vectors.query_solutions(groundtruth_file, j);
             std::sort(groundtruth.begin(), groundtruth.end());
