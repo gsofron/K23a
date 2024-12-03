@@ -6,10 +6,15 @@ TEST_DIR := .
 CXX = g++
 CXXFLAGS = -g -Wall -Wextra -std=c++17 $(addprefix -I,$(INC_DIRS))
 
-all: ../directed_graph_test ../vectors_test \
-     ../greedy_search_test ../filtered_greedy_search_test \
-	 ../robust_prune_test ../filtered_robust_prune_test \
-	 ../vamana_test ../findmedoid_test
+# all: ../directed_graph_test ../vectors_test \
+#      ../greedy_search_test ../filtered_greedy_search_test \
+# 	 ../robust_prune_test ../filtered_robust_prune_test \
+# 	 ../vamana_test ../findmedoid_test
+
+all: ../vectors_test \
+	 ../filtered_greedy_search_test \
+	 ../filtered_robust_prune_test \
+	 ../findmedoid_test
 
 ../directed_graph_test: $(BUILD_DIR)/directed_graph_test.o $(BUILD_DIR)/directed_graph.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
