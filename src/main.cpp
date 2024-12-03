@@ -134,13 +134,31 @@ int main(int argc, char *argv[]) {
         std::cout << "Total Recall Percent: " << 100*recall_sum/count << "%" << std::endl;
     } else {
         float filter = vectors.filters[index + base_vectors_num];
-        int start = M->at(filter);
-        if (index >= query_vectors_num) {
-            std::cout << "Invalid query index." << std::endl;
-            return 0;
-        }
-        auto L_set = FilteredGreedySearch(*g, vectors, start, base_vectors_num + index, K, L).first;
+            
+        if (filter != -1 && M->find(filter) == M->end()) std::cout << "This query's filter does not match with any filter of the base vectors" << std::endl;;
         
+
+        std::vector<int> L_set;
+        if (filter > -1) {
+            int start = M->at(filter);
+            L_set = FilteredGreedySearch(*g, vectors, start, index+base_vectors_num, K, L).first;
+        } else {
+            std::set<std::pair<float, int>> all_medoids_knn;
+            for (auto pair : *M) {
+                auto set = FilteredGreedySearch(*g, vectors, pair.second, index+base_vectors_num, K, L).second;
+
+                auto start = set.begin();
+                auto end = set.begin();
+                std::advance(end, std::min(K, static_cast<int>(set.size()))); 
+                all_medoids_knn.insert(start, end);
+            }
+
+            auto it = all_medoids_knn.begin();
+            for (int i = 0; i < K && it != all_medoids_knn.end(); i++, it++) {
+                L_set.push_back(it->second);
+            }
+        }
+
         auto groundtruth = vectors.query_solutions(groundtruth_file, index);
         std::sort(groundtruth.begin(), groundtruth.end());
         while (groundtruth[0] == -1) groundtruth.erase(groundtruth.begin());
