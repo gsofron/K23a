@@ -8,5 +8,6 @@
 ./filtered_greedy_search_test
 # ./robust_prune_test
 ./filtered_robust_prune_test
-# ./vamana_test
+./vamana_test
 ./findmedoid_test
+./filtered_vamana_test

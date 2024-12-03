@@ -6,15 +6,11 @@ TEST_DIR := .
 CXX = g++
 CXXFLAGS = -g -Wall -Wextra -std=c++17 $(addprefix -I,$(INC_DIRS))
 
-# all: ../directed_graph_test ../vectors_test \
-#      ../greedy_search_test ../filtered_greedy_search_test \
-# 	 ../robust_prune_test ../filtered_robust_prune_test \
-# 	 ../vamana_test ../findmedoid_test
-
-all: ../vectors_test \
-	 ../filtered_greedy_search_test \
-	 ../filtered_robust_prune_test \
-	 ../findmedoid_test
+all: ../directed_graph_test ../vectors_test \
+     ../greedy_search_test ../filtered_greedy_search_test \
+	 ../robust_prune_test ../filtered_robust_prune_test \
+	 ../vamana_test ../findmedoid_test \
+	 ../filtered_vamana_test
 
 ../directed_graph_test: $(BUILD_DIR)/directed_graph_test.o $(BUILD_DIR)/directed_graph.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
@@ -38,6 +34,9 @@ all: ../vectors_test \
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 ../findmedoid_test: $(BUILD_DIR)/findmedoid_test.o $(BUILD_DIR)/findmedoid.o $(BUILD_DIR)/vectors.o
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+../filtered_vamana_test: $(BUILD_DIR)/filtered_vamana_test.o $(BUILD_DIR)/filtered_vamana.o $(BUILD_DIR)/vectors.o $(BUILD_DIR)/directed_graph.o $(BUILD_DIR)/findmedoid.o $(BUILD_DIR)/filtered_greedy_search.o $(BUILD_DIR)/filtered_robust_prune.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(BUILD_DIR)/%.o: $(TEST_DIR)/%.cpp
