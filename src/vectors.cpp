@@ -36,7 +36,6 @@ Vectors::Vectors(const std::string& file_name, int vectors_dimention, int num_re
 
         // Initialise the euclidean distances of all the vectors
         dist_matrix[base_size] = new float[max_vectors]();
-        
         base_size++;
     }
 
