@@ -6,11 +6,8 @@
 // Creates a random R-regular out-degree directed graph
 DirectedGraph *random_graph(int num_of_vertices, int R);
 
-// Returns the medoid vertex (vector index) of given dataset
-int medoid(const Vectors& vectors);
-
-// Vamana Indexing Algorithm implementation, based on provided paper
-DirectedGraph *vamana(Vectors& P, float a, int L, int R);
+// Vamana Indexing Algorithm implementation using Pf as the database
+DirectedGraph *vamana(Vectors& P, int *Pf, int n, float a, int L, int R);
 
 // Writes (stores) a vamana graph into a (binary) file
 void write_vamana_to_file(DirectedGraph& g, const std::string& file_name);
