@@ -9,8 +9,15 @@ DirectedGraph *stitched_vamana(Vectors& P, float a, int L_small, int R_small, in
 
     // For each filter find the corresponding graph and stitch them together
     for (const auto& pair : P.filters_map) {
-        DirectedGraph *G_f = vamana(P, a, L_small, R_small);
-        G->stitch(G_f);
+        int size = pair.second.size();
+        int *P_f = new int[size];
+
+        size_t index = 0;
+        for (int value : pair.second) {
+            P_f[index++] = value;
+        }
+        DirectedGraph *G_f = vamana(P, P_f, index, a, L_small, R_small);
+        G->stitch(G_f, P_f);
     }
 
     // For each vertex call the filtered robust prune
@@ -25,4 +32,6 @@ DirectedGraph *stitched_vamana(Vectors& P, float a, int L_small, int R_small, in
 
         filtered_robust_prune(G, P, i, ordered_neighbors_i, a, R_stitched);
     }
+
+    return G;
 }
