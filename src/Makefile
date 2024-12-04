@@ -13,7 +13,8 @@ OBJS_FILTERED := $(BUILD_DIR)/directed_graph.o $(BUILD_DIR)/filtered_greedy_sear
 EXEC_STITCHED := ../stitched 
 OBJS_STITCHED := $(BUILD_DIR)/directed_graph.o $(BUILD_DIR)/filtered_greedy_search.o  $(BUILD_DIR)/filtered_robust_prune.o \
                  $(BUILD_DIR)/findmedoid.o $(BUILD_DIR)/vectors.o $(BUILD_DIR)/greedy_search.o \
-				 $(BUILD_DIR)/robust_prune.o $(BUILD_DIR)/vamana.o $(BUILD_DIR)/stitched_vamana.o
+                 $(BUILD_DIR)/robust_prune.o $(BUILD_DIR)/vamana.o $(BUILD_DIR)/stitched_vamana.o
+
 
 
 EXEC_GROUNDTRUTH := ../groundtruth

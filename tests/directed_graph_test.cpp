@@ -113,8 +113,14 @@ void test_directed_graph_stitch(void) {
         g2->insert(i, d);
     }
 
+    // Construct Pf to include all points
+    int Pf[NUM_OF_ENTRIES];
+    for (int i = 0 ; i < NUM_OF_ENTRIES ; i++) {
+        Pf[i] = i;
+    }
+
     // Stitch g2 to g1
-    g1->stitch(g2);
+    g1->stitch(g2, Pf);
     for (int i = 0 ; i < NUM_OF_ENTRIES ; i++) {
         // Each vertex should have exactly 4 neighbors
         auto stitched_neighbors = g1->get_neighbors(i);

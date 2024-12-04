@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     #else
     else g = stitched_vamana(vectors, a, L_small, R_small, R_stitched);
     #endif
-
+    
     // User wants to calculate total recall
     auto *M = find_medoid(vectors, t);
     if (index == -1) {

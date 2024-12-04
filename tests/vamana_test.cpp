@@ -35,16 +35,28 @@ void test_medoid(void) {
 
     // It is clear that the medoid point (vector) is vectors[2]
 
+    // Construct Pf to include all points
+    int Pf[5];
+    for (int i = 0 ; i < 5 ; i++) {
+        Pf[i] = i;
+    }
+
     // Assure that the medoid() function finds the medoid point
-    TEST_CHECK(medoid(vectors) == 2);
+    TEST_CHECK(medoid(vectors, Pf, 5) == 2);
 }
 
 void test_vamana(void) {
     // Create random vectors to use as a dataset
     Vectors vectors = Vectors(NUM_OF_ENTRIES, 0);
 
+    // Construct Pf to include all points
+    int Pf[NUM_OF_ENTRIES];
+    for (int i = 0 ; i < NUM_OF_ENTRIES ; i++) {
+        Pf[i] = i;
+    }
+
     // Create the Vamana graph
-    DirectedGraph *g = vamana(vectors, A, L, R);
+    DirectedGraph *g = vamana(vectors, Pf, NUM_OF_ENTRIES, A, L, R);
 
     // Test the out-degree of each vertex. It should be <= R
     int n = vectors.size();
@@ -58,7 +70,12 @@ void test_vamana(void) {
 void test_read_and_write_file(void) {
     // Create a random vamana graph and test the read_from and write_to functions
     Vectors vectors = Vectors(NUM_OF_ENTRIES, 0);
-    DirectedGraph *g1 = vamana(vectors, A, L, R);
+    // Construct Pf to include all points
+    int Pf[NUM_OF_ENTRIES];
+    for (int i = 0 ; i < NUM_OF_ENTRIES ; i++) {
+        Pf[i] = i;
+    }
+    DirectedGraph *g1 = vamana(vectors, Pf, NUM_OF_ENTRIES, A, L, R);
 
     const std::string file_name = "build/test_vamana_file";
 

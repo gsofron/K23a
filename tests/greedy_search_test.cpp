@@ -26,8 +26,14 @@ void test_greedy_search(void) {
     int k = 5;                    // Number of nearest neighbors to retrieve
     unsigned long L = 10;        // Maximum allowed search steps
 
+    // Construct Pf to include all points
+    int Pf[1003];
+    for (int i = 0 ; i < 1003 ; i++) {
+        Pf[i] = i;
+    }
+
     // Execute GreedySearch and store the result
-    auto result = GreedySearch(graph, vectors, 0, 1000, k, L);
+    auto result = GreedySearch(graph, vectors, Pf, 1003, 0, 1000, k, L);
 
     // Check results' validity
     TEST_CHECK(result.first[0] == 666);
