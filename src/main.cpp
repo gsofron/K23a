@@ -13,6 +13,7 @@
 #include "directed_graph.hpp"
 #include "filtered_greedy_search.hpp"
 #include "filtered_vamana.hpp"
+#include "stitched_vamana.hpp"
 #include "findmedoid.hpp"
 #include "robust_prune.hpp"
 #include "utils.hpp"
@@ -82,10 +83,9 @@ int main(int argc, char *argv[]) {
     #ifdef FILTERED_VAMANA
     else g = filtered_vamana(vectors, a, L, R, t);
     #else
-    // else g = stitched();
-    else exit(EXIT_SUCCESS);
+    else g = stitched_vamana(vectors, a, L_small, R_small, R_stitched);
     #endif
-
+    
     // User wants to calculate total recall
     auto *M = find_medoid(vectors, t);
     if (index == -1) {

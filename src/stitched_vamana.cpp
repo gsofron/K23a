@@ -10,6 +10,9 @@ DirectedGraph *stitched_vamana(Vectors& P, float a, int L_small, int R_small, in
     // For each filter find the corresponding graph and stitch them together
     for (const auto& pair : P.filters_map) {
         int size = pair.second.size();
+        if (size == 1) {
+            continue;
+        }
         int *P_f = new int[size];
 
         size_t index = 0;
