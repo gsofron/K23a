@@ -6,6 +6,9 @@
 // Creates a random R-regular out-degree directed graph
 DirectedGraph *random_graph(int num_of_vertices, int R);
 
+// Returns the medoid vertex (vector index) of Pf
+int medoid(const Vectors& vectors, int *Pf, int n);
+
 // Vamana Indexing Algorithm implementation using Pf as the database
 DirectedGraph *vamana(Vectors& P, int *Pf, int n, float a, int L, int R);
 
