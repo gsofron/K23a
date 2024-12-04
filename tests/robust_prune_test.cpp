@@ -19,10 +19,16 @@ void test_robust_prune_general(void) {
     // Create a random graph where each vertex points to all other vertices
     DirectedGraph *g = random_graph(NUM_OF_VECS, NUM_OF_VECS-1);
 
+    // Construct Pf to include all points
+    int Pf[NUM_OF_VECS];
+    for (int i = 0 ; i < NUM_OF_VECS ; i++) {
+        Pf[i] = i;
+    }
+
     // Convert graph into an R-regular graph
     for (int i = 0 ; i < NUM_OF_VECS ; i++) {
         std::set<std::pair<float, int>> empty;
-        robust_prune(g, vectors, i, empty, A, R);
+        robust_prune(g, vectors, Pf, i, empty, A, R);
 
         // Check if Robust Prune successfully returned no more than R neighbors
         const auto& neighbors = g->get_neighbors(i);
@@ -43,12 +49,18 @@ void test_robust_prune_empty_set(void) {
     // Create a random graph where each vertex points to all other vertices
     DirectedGraph *g = random_graph(NUM_OF_VECS, NUM_OF_VECS-1);
 
+    // Construct Pf to include all points
+    int Pf[NUM_OF_VECS];
+    for (int i = 0 ; i < NUM_OF_VECS ; i++) {
+        Pf[i] = i;
+    }
+
     // Repeat for all vertices
     for (int i = 0 ; i < NUM_OF_VECS ; i++) {
         // Even though an empty set is given, Robust Prune should prune all neighbors except from the actual
         // nearest neighbor of the current vertex. This happens because each vertex points to all other vertices
         std::set<std::pair<float, int>> empty;
-        robust_prune(g, vectors, i, empty, A, 1);
+        robust_prune(g, vectors, Pf, i, empty, A, 1);
 
         // Check if robust prune successfully returned only 1 neighbor
         const auto& neighbors = g->get_neighbors(i);
@@ -86,6 +98,12 @@ void test_robust_prune_full_set(void) {
     // Create a graph where each vertex points to only one random vertex
     DirectedGraph *g = random_graph(NUM_OF_VECS, 1);
 
+    // Construct Pf to include all points
+    int Pf[NUM_OF_VECS];
+    for (int i = 0 ; i < NUM_OF_VECS ; i++) {
+        Pf[i] = i;
+    }
+
     // Repeat for all vertices
     for (int i = 0 ; i < NUM_OF_VECS ; i++) {
         // Get the set containing all vertices
@@ -98,7 +116,7 @@ void test_robust_prune_full_set(void) {
         
         // Even though each vertex only has one random neighbor, Robust Prune should replace it with the
         // actual nearest neighbor of the current vertex since set 's' contains all vertices
-        robust_prune(g, vectors, i, s2, A, 1);
+        robust_prune(g, vectors, Pf, i, s2, A, 1);
 
         // Check if robust prune successfully returned only 1 neighbor
         const auto& neighbors = g->get_neighbors(i);
