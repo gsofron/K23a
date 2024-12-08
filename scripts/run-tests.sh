@@ -2,6 +2,7 @@
 
 # Simple bash script that executes all unit-tests
 
+echo -e "\nExecuting all unit tests"
 ./directed_graph_test
 ./vectors_test
 ./greedy_search_test
