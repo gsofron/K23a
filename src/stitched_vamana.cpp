@@ -23,6 +23,7 @@ DirectedGraph *stitched_vamana(Vectors& P, float a, int L_small, int R_small, in
         G->stitch(G_f, P_f);
 
         delete[] P_f;
+        delete G_f;
     }
 
     // For each vertex call the filtered robust prune
