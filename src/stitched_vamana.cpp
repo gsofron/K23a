@@ -21,6 +21,8 @@ DirectedGraph *stitched_vamana(Vectors& P, float a, int L_small, int R_small, in
         }
         DirectedGraph *G_f = vamana(P, P_f, index, a, L_small, R_small);
         G->stitch(G_f, P_f);
+
+        delete[] P_f;
     }
 
     // For each vertex call the filtered robust prune

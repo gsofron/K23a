@@ -173,6 +173,7 @@ int main(int argc, char *argv[]) {
     // Check if user wants to save the graph
     if (!save_file.empty()) write_vamana_to_file(*g, save_file);
 
+    delete M;
     delete g;
     return 0;
 }
