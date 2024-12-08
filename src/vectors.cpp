@@ -54,7 +54,7 @@ Vectors::Vectors(int num_vectors, int queries_num)
     
     vectors = new float*[base_size + queries];
     dist_matrix = new float*[base_size + queries];
-    filters = new float[base_size + queries];
+    filters = new float[base_size + queries]();
 
     for (int i = 0; i < base_size; i++) {
         vectors[i] = new float[dimention];
