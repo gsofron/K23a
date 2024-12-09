@@ -12,7 +12,7 @@ jobs:
       run: make tests
     
     - name: Set execute permission for run-tests.sh script
-      run: chmod +x ./run-tests.sh
+      run: chmod a+x ./scripts/run-tests.sh
 
     - name: Run tests
-      run: ./run-tests.sh
+      run: ./scripts/run-tests.sh

@@ -92,6 +92,57 @@ void test_directed_graph_remove(void) {
     delete g;
 }
 
+void test_directed_graph_stitch(void) {
+    // In g1, each vertex points to the next 2
+    DirectedGraph *g1 = new DirectedGraph(NUM_OF_ENTRIES);
+    for (int i = 0 ; i < NUM_OF_ENTRIES ; i++) {
+        int a = i+1, b = i+2;
+        if (a >= NUM_OF_ENTRIES) a -= NUM_OF_ENTRIES;
+        if (b >= NUM_OF_ENTRIES) b -= NUM_OF_ENTRIES;
+        g1->insert(i, a);
+        g1->insert(i, b);
+    }
+
+    // In g2, each vertex points to the previous 2
+    DirectedGraph *g2 = new DirectedGraph(NUM_OF_ENTRIES);
+    for (int i = 0 ; i < NUM_OF_ENTRIES ; i++) {
+        int c = i+-1, d = i-2;
+        if (c < 0) c += NUM_OF_ENTRIES;
+        if (d < 0) d += NUM_OF_ENTRIES;
+        g2->insert(i, c);
+        g2->insert(i, d);
+    }
+
+    // Construct Pf to include all points
+    int Pf[NUM_OF_ENTRIES];
+    for (int i = 0 ; i < NUM_OF_ENTRIES ; i++) {
+        Pf[i] = i;
+    }
+
+    // Stitch g2 to g1
+    g1->stitch(g2, Pf);
+    for (int i = 0 ; i < NUM_OF_ENTRIES ; i++) {
+        // Each vertex should have exactly 4 neighbors
+        auto stitched_neighbors = g1->get_neighbors(i);
+        TEST_CHECK(stitched_neighbors.size() == 4);
+
+        // Test if the 4 neighbors are the ones we had before
+        int a = i+1, b = i+2, c = i+-1, d = i-2;
+        if (a >= NUM_OF_ENTRIES) a -= NUM_OF_ENTRIES;
+        if (b >= NUM_OF_ENTRIES) b -= NUM_OF_ENTRIES;
+        if (c < 0) c += NUM_OF_ENTRIES;
+        if (d < 0) d += NUM_OF_ENTRIES;
+
+        TEST_CHECK(stitched_neighbors.find(a) != stitched_neighbors.end());
+        TEST_CHECK(stitched_neighbors.find(b) != stitched_neighbors.end());
+        TEST_CHECK(stitched_neighbors.find(c) != stitched_neighbors.end());
+        TEST_CHECK(stitched_neighbors.find(d) != stitched_neighbors.end());
+    }
+
+    delete g1;
+    delete g2;
+}
+
 void test_directed_graph_get_neighbors(void) {
     // Init a directed graph
     DirectedGraph *g = new DirectedGraph(NUM_OF_ENTRIES);
@@ -124,6 +175,7 @@ TEST_LIST = {
     { "test_directed_graph_init", test_directed_graph_init },
     { "test_directed_graph_insert", test_directed_graph_insert },
     { "test_directed_graph_remove", test_directed_graph_remove },
+    { "test_directed_graph_stitch", test_directed_graph_stitch },
     { "test_directed_graph_get_neighbors", test_directed_graph_get_neighbors },
     { NULL, NULL } // Terminate test list with NULL
 };

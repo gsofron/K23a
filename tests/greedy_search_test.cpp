@@ -1,13 +1,11 @@
 #include "acutest.h"         
 #include <vector>
-#include <iostream>
-#include "vectors.hpp"          
-#include "directed_graph.hpp"    
+#include <iostream> 
 #include "greedy_search.hpp"      
 
 // Creates a sample directed graph with sequential and near-sequential edges
 DirectedGraph create_graph(int num) {
-    DirectedGraph graph(10000);  
+    DirectedGraph graph(1000);  
 
     for (int i = 0; i < num - 2; i++) {  
         graph.insert(i, i + 1);  
@@ -18,18 +16,24 @@ DirectedGraph create_graph(int num) {
 
 // Tests the GreedySearch function for a specific graph structure
 void test_greedy_search(void) {
-    Vectors<int> vectors(1000, 1);  // Initialize Vectors object for testing
+    Vectors vectors(1000, 1);  // Initialize Vectors object for testing
     DirectedGraph graph = create_graph(1000);  // Create test graph with 1000 nodes
 
     // Define a single query vector
-    int query_values[] = {3000, 2000, 1000};
+    float query_values[] = {3000, 2000, 1000};
     vectors.add_query(query_values);  // Add query to vectors
     
     int k = 5;                    // Number of nearest neighbors to retrieve
     unsigned long L = 10;        // Maximum allowed search steps
 
+    // Construct Pf to include all points
+    int Pf[1003];
+    for (int i = 0 ; i < 1003 ; i++) {
+        Pf[i] = i;
+    }
+
     // Execute GreedySearch and store the result
-    auto result = GreedySearch(graph, vectors, 0, 1000, k, L);
+    auto result = GreedySearch(graph, vectors, Pf, 1003, 0, 1000, k, L);
 
     // Check results' validity
     TEST_CHECK(result.first[0] == 666);

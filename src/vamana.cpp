@@ -1,13 +1,21 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <limits>
+#include <random>
+#include <string>
 
+#include "greedy_search.hpp"
+#include "robust_prune.hpp"
+#include "utils.hpp"
 #include "vamana.hpp"
 
 // Creates a random R-regular out-degree directed graph
 DirectedGraph *random_graph(int num_of_vertices, int R) {
-    // If there are k vertices, each vertex can have at most k-1 neighbours
-    ERROR_EXIT(R > num_of_vertices - 1, "Too many neighbors")
     ERROR_EXIT(R <= 0, "Invalid R")
+
+    // If there are k vertices, each vertex can have at most k-1 neighbours
+    if (R > num_of_vertices - 1) R = num_of_vertices-1;
 
     DirectedGraph *g = new DirectedGraph(num_of_vertices);
     // In each iteration, save vertices that have already been picked
@@ -28,6 +36,67 @@ DirectedGraph *random_graph(int num_of_vertices, int R) {
     delete[] picked_indexes;
 
     return g;
+}
+
+// Returns the medoid vertex (vector index) of Pf
+int medoid(const Vectors& vectors, int *Pf, int n) {
+    // Simple brute-force algorithm
+    float min = std::numeric_limits<float>::max();
+    int m = -1;
+    for (int i = 0; i < n; i++) {
+        float sum = 0.0;
+        for (int j = 0; j < n && sum < min; j++) { // Add euclidean distances
+            sum += vectors.euclidean_distance_cached(Pf[i], Pf[j]);
+        }
+        if (sum < min) {
+            min = sum;
+            m = i;
+        }
+    }
+    return m;
+}
+
+DirectedGraph *vamana(Vectors& P, int *Pf, int n, float a, int L, int R) {
+    // Init the R-regular (counting out-degree only) graph
+    DirectedGraph *G = random_graph(n, R);
+    
+    // Init Pf's medoid
+    int s = medoid(P, Pf, n);
+
+    // Create the random permutation sigma (σ)
+    int *sigma = new int[n];
+    for (int i = 0; i < n; i++) {
+        sigma[i] = i;
+    }
+    // Shuffle to create the random permutation
+    // Source for how to shuffle: https://stackoverflow.com/a/6926473
+    auto rd = std::random_device {}; 
+    auto rng = std::default_random_engine { rd() };
+    std::shuffle(sigma, sigma + n, rng);
+    
+    for (int i = 0; i < n; i++) {
+        auto [Lset, V] = GreedySearch(*G, P, Pf, n, s, sigma[i], 1, L);
+        robust_prune(G, P, Pf, sigma[i], V, a, R);
+
+        const auto& N_out_sigma_i = G->get_neighbors(sigma[i]);
+        for (auto j : N_out_sigma_i) {
+            const auto& N_out_j = G->get_neighbors(j);
+            if ((int)N_out_j.size() + 1 > R) {
+                std::set<std::pair<float, int>> new_N_out_j;
+                for (auto v : N_out_j) {
+                    new_N_out_j.insert({P.euclidean_distance_cached(Pf[j], Pf[v]), v});
+                }
+                new_N_out_j.insert({P.euclidean_distance_cached(Pf[j], Pf[sigma[i]]), sigma[i]});
+                robust_prune(G, P, Pf, j, new_N_out_j, a, R);
+            } else {
+                G->insert(j, sigma[i]);
+            }
+        }
+    }
+
+    delete[] sigma;
+
+    return G;
 }
 
 // Writes (stores) a vamana graph into a (binary) file
