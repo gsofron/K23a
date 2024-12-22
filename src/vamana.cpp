@@ -39,14 +39,14 @@ DirectedGraph *random_graph(int num_of_vertices, int R) {
 }
 
 // Returns the medoid vertex (vector index) of Pf
-int medoid(const Vectors& vectors, int *Pf, int n) {
+int medoid(Vectors& vectors, int *Pf, int n) {
     // Simple brute-force algorithm
     float min = std::numeric_limits<float>::max();
     int m = -1;
     for (int i = 0; i < n; i++) {
         float sum = 0.0;
         for (int j = 0; j < n && sum < min; j++) { // Add euclidean distances
-            sum += vectors.euclidean_distance_cached(Pf[i], Pf[j]);
+            sum += vectors.euclidean_distance(Pf[i], Pf[j]);
         }
         if (sum < min) {
             min = sum;
@@ -84,9 +84,9 @@ DirectedGraph *vamana(Vectors& P, int *Pf, int n, float a, int L, int R) {
             if ((int)N_out_j.size() + 1 > R) {
                 std::set<std::pair<float, int>> new_N_out_j;
                 for (auto v : N_out_j) {
-                    new_N_out_j.insert({P.euclidean_distance_cached(Pf[j], Pf[v]), v});
+                    new_N_out_j.insert({P.euclidean_distance(Pf[j], Pf[v]), v});
                 }
-                new_N_out_j.insert({P.euclidean_distance_cached(Pf[j], Pf[sigma[i]]), sigma[i]});
+                new_N_out_j.insert({P.euclidean_distance(Pf[j], Pf[sigma[i]]), sigma[i]});
                 robust_prune(G, P, Pf, j, new_N_out_j, a, R);
             } else {
                 G->insert(j, sigma[i]);

@@ -12,7 +12,7 @@ GreedySearch(DirectedGraph& graph, Vectors& vectors, int *Pf, int n, int start, 
     std::fill(visited, visited + n, false);
 
     // Start with the initial node distance
-    L_set.insert({vectors.euclidean_distance_cached(Pf[query], Pf[start]), start});  
+    L_set.insert({vectors.euclidean_distance(Pf[query], Pf[start]), start});  
   
     // Main search loop
     while (true) {
@@ -29,7 +29,7 @@ GreedySearch(DirectedGraph& graph, Vectors& vectors, int *Pf, int n, int start, 
         // Insert neighbors with distances
         const auto& neighbors = graph.get_neighbors(p_star->second);
         for (auto neighbor : neighbors) {
-            L_set.insert({vectors.euclidean_distance_cached(Pf[query], Pf[neighbor]), neighbor});
+            L_set.insert({vectors.euclidean_distance(Pf[query], Pf[neighbor]), neighbor});
         }
 
         // Restrict L_set to a maximum size of L
@@ -50,7 +50,7 @@ GreedySearch(DirectedGraph& graph, Vectors& vectors, int *Pf, int n, int start, 
     // Add the deleted visited indeces to L_set
     for (int i = 0; i < n; i++) {
         if (visited[i]) {
-            L_set.insert({vectors.euclidean_distance_cached(Pf[query], Pf[i]), i});
+            L_set.insert({vectors.euclidean_distance(Pf[query], Pf[i]), i});
         }
     }
 

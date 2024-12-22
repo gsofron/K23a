@@ -6,7 +6,7 @@ void robust_prune(DirectedGraph *G, Vectors& vectors, int *Pf, int p, std::set<s
 
     // V <- (V U Nout(p)) \ {p}
     for (auto index : N_out_p) {
-        V.insert({vectors.euclidean_distance_cached(Pf[p], Pf[index]), index});
+        V.insert({vectors.euclidean_distance(Pf[p], Pf[index]), index});
     }
     V.erase({0.0, p});
 
@@ -35,7 +35,7 @@ void robust_prune(DirectedGraph *G, Vectors& vectors, int *Pf, int p, std::set<s
             int p_prime = it->second;
 
             // if a ⋅ d(p*, p') <= d(p, p') then remove p' from V
-            if (a * vectors.euclidean_distance_cached(Pf[p_star], Pf[p_prime]) <= vectors.euclidean_distance_cached(Pf[p], Pf[p_prime])) it = V.erase(it);
+            if (a * vectors.euclidean_distance(Pf[p_star], Pf[p_prime]) <= vectors.euclidean_distance(Pf[p], Pf[p_prime])) it = V.erase(it);
             else it++;
         }
     }

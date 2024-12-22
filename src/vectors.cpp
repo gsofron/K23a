@@ -39,12 +39,6 @@ Vectors::Vectors(const std::string& file_name, int vectors_dimention, int num_re
         base_size++;
     }
 
-    for (int i = 0; i < base_size; i++) {
-        for (int j = i + 1; j < base_size; j++) {
-            euclidean_distance(i, j);
-        }
-    }
-
     file.close();
 }
 
@@ -65,12 +59,6 @@ Vectors::Vectors(int num_vectors, int queries_num)
             vectors[i][j] = static_cast<float>(i * 3 + (j + 1)); 
         }
     }
-
-    for (int i = 0; i < base_size; i++) {
-        for (int j = i + 1; j < base_size; j++) {
-            euclidean_distance(i, j);
-        }
-    }
 }
 
 // Destructor to free allocated memory
@@ -85,20 +73,23 @@ Vectors::~Vectors() {
 }
 
 // Calculate Euclidean distance and update cache
-float Vectors::euclidean_distance(int index1, int index2) const {
+float Vectors::euclidean_distance(int index1, int index2) {
+    if (index1 < base_size && index2 < base_size && dist_matrix[index1][index2] > 0)
+        return dist_matrix[index1][index2];
+
     float sum = 0.0, diff;
     auto& a = vectors[index1];
     auto& b = vectors[index2];
 
-    for (auto i = 0; i < dimention; i++) {
-        diff = static_cast<float>(a[i]) - static_cast<float>(b[i]);
+    for (int i = 0; i < dimention; i++) {
+        diff = a[i] - b[i];
         sum += diff * diff;
     }
 
-    if (index1 >= base_size || index2 >= base_size) return sum;
-    dist_matrix[index1][index2] = dist_matrix[index2][index1] = sum;
+    if (index1 < base_size && index2 < base_size)
+        dist_matrix[index1][index2] = dist_matrix[index2][index1] = sum;
 
-    return dist_matrix[index1][index2];
+    return sum;
 }
 
 // Load multiple query vectors from a file

@@ -33,7 +33,7 @@ DirectedGraph *stitched_vamana(Vectors& P, float a, int L_small, int R_small, in
 
         std::set<std::pair<float, int>> ordered_neighbors_i;
         for (auto v : neighbors_i) {
-            ordered_neighbors_i.insert({P.euclidean_distance_cached(i, v), v});
+            ordered_neighbors_i.insert({P.euclidean_distance(i, v), v});
         }
 
         filtered_robust_prune(G, P, i, ordered_neighbors_i, a, R_stitched);
