@@ -3,7 +3,7 @@ INC_DIR := ../include
 SRC_DIR := .
 
 CXX = g++
-CXXFLAGS = -g -Wall -Wextra -std=c++17 -O2 $(addprefix -I,$(INC_DIR))
+CXXFLAGS = -g -Wall -Wextra -std=c++17 -fopenmp -O2 $(addprefix -I,$(INC_DIR))
 
 EXEC_FILTERED := ../filtered
 OBJS_FILTERED := $(BUILD_DIR)/directed_graph.o $(BUILD_DIR)/filtered_greedy_search.o  $(BUILD_DIR)/filtered_robust_prune.o \

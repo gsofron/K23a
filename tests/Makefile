@@ -4,7 +4,7 @@ SRC_DIR := ../src
 TEST_DIR := .
 
 CXX = g++
-CXXFLAGS = -g -Wall -Wextra -std=c++17 $(addprefix -I,$(INC_DIRS))
+CXXFLAGS = -g -Wall -Wextra -std=c++17 -fopenmp $(addprefix -I,$(INC_DIRS))
 
 all: ../directed_graph_test ../vectors_test \
      ../greedy_search_test ../filtered_greedy_search_test \
