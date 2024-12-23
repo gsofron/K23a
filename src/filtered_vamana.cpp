@@ -39,7 +39,7 @@ DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold)
             if ((int)N_out_j.size() > R) {
                 std::set<std::pair<float, int>> new_N_out_j;
                 for (auto v : N_out_j)
-                    new_N_out_j.insert({P.euclidean_distance_cached(j, v), v});
+                    new_N_out_j.insert({P.euclidean_distance(j, v), v});
 
                 filtered_robust_prune(G, P, j, new_N_out_j, a, R);
             }

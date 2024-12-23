@@ -15,7 +15,7 @@ FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int start, int quer
 
     // Insert to L_set the start node if it has the same filter with the query
     if (vectors.same_filter(query, start)) {
-        L_set.insert({vectors.euclidean_distance_cached(query, start), start});
+        L_set.insert({vectors.euclidean_distance(query, start), start});
     }
 
     // Main search loop
@@ -34,7 +34,7 @@ FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int start, int quer
         const auto& neighbors = graph.get_neighbors(p_star->second);
         for (auto neighbor : neighbors) {
             if (vectors.same_filter(query, neighbor) && !visited[neighbor]) {
-                L_set.insert({vectors.euclidean_distance_cached(query, neighbor), neighbor});
+                L_set.insert({vectors.euclidean_distance(query, neighbor), neighbor});
             }
         }
 
@@ -56,7 +56,7 @@ FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int start, int quer
     // Add the deleted visited indeces to L_set
     for (size_t i = 0; i < vectors_size; i++) {
         if (visited[i]) {
-            L_set.insert({vectors.euclidean_distance_cached(query, i), i});
+            L_set.insert({vectors.euclidean_distance(query, i), i});
         }
     }
 

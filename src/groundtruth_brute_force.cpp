@@ -12,7 +12,7 @@ void write_true_knn(std::ofstream &groundtruth_file, Vectors &vectors, int data_
     // Save the pair (euclidean distance, index) of all neighbors in ascending eclidean distance
     std::set<std::pair<float, int>> s;
     for (int i = 0 ; i < data_vecs_num ; i++) {
-        float dist = vectors.euclidean_distance_cached(query_array_index, i);
+        float dist = vectors.euclidean_distance(query_array_index, i);
         if (dist == 0.0) continue;  // We don't calculate the distance between vectors with a different filter
         
         std::pair<float, int> p(dist, i);
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     if (!groundtruth_file) throw std::runtime_error("Error opening file: " + (std::string)argv[3]);
 
     // Since Vectors class doesn't save queries that contain timestamp, save the number of valid queries
-    // and use it as an offset for euclidean_distance_cached()
+    // and use it as an offset for euclidean_distance()
     int count = 0;    
 
     // Read all vectors. Query vectors have dimension of 104
