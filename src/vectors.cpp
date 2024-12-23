@@ -72,22 +72,23 @@ Vectors::~Vectors() {
     delete[] filters;
 }
 
-// Calculate Euclidean distance and update cache
+// Calculate Euclidean distance between two vectors
 float Vectors::euclidean_distance(int index1, int index2) {
-    if (index1 < base_size && index2 < base_size && dist_matrix[index1][index2] > 0)
+    if (dist_matrix[index1][index2] > 0) // If the distance has been cached
         return dist_matrix[index1][index2];
 
+    // Calculate Euclidean distance
     float sum = 0.0, diff;
     auto& a = vectors[index1];
     auto& b = vectors[index2];
-
     for (int i = 0; i < dimention; i++) {
         diff = a[i] - b[i];
         sum += diff * diff;
     }
-
-    if (index1 < base_size && index2 < base_size)
-        dist_matrix[index1][index2] = dist_matrix[index2][index1] = sum;
+    // Cache the distance for (possible) future use
+    dist_matrix[index1][index2] = sum;
+    if (index1 < base_size)
+        dist_matrix[index2][index1] = sum;
 
     return sum;
 }
@@ -125,17 +126,6 @@ void Vectors::read_queries(const std::string& file_name, int read_num) {
             throw std::runtime_error("Error reading vector data from file");
         }
 
-        if (!type) { // Initialise euclidean distance from query to every other base vector 
-            for (int i = 0 ; i < base_size ; i++) {
-                dist_matrix[num_read_vectors][i] = euclidean_distance(num_read_vectors, i);
-            }
-        } else { // Initialise the euclidean distance from the query to every other vector that has the same filter
-            for (int i = 0 ; i < base_size ; i++) {
-                if (filters[num_read_vectors] == filters[i]) {
-                    dist_matrix[num_read_vectors][i] = euclidean_distance(num_read_vectors, i);
-                }
-            }
-        }
         num_read_vectors++;
     }
     file.close();
@@ -171,18 +161,6 @@ bool Vectors::read_query(const std::string& file_name, int index) {
     if (!file.read(reinterpret_cast<char*>(vectors[base_size]), dimention * sizeof(float))) {
         throw std::runtime_error("Error reading vector data from file");
     }
-
-    if (!type) { // Initialise euclidean distance from query to every other base vector 
-        for (int i = 0 ; i < base_size ; i++) {
-            dist_matrix[base_size][i] = euclidean_distance(base_size, i);
-        }
-    } else { // Initialise the euclidean distance from the query to every other vector that has the same filter
-        for (int i = 0 ; i < base_size ; i++) {
-            if (filters[base_size] == filters[i]) {
-                dist_matrix[base_size][i] = euclidean_distance(base_size, i);
-            }
-        }
-    }
     
     file.close();
     return true;
@@ -213,6 +191,7 @@ void Vectors::add_query(float *values) {
 
     dist_matrix[base_size] = new float[base_size];
     for (int i = 0 ; i < base_size ; i++) {
+        dist_matrix[base_size][i] = 0;
         dist_matrix[base_size][i] = euclidean_distance(base_size, i);
     }
 }
