@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     vectors.read_queries(query_file, query_vectors_num);
 
     // Start timer for build time
-    auto start = std::chrono::high_resolution_clock::now();
+    auto t1 = std::chrono::high_resolution_clock::now();
 
     DirectedGraph *g;
     // If user gave vamana file, use it to initialize the graph
@@ -82,12 +82,12 @@ int main(int argc, char *argv[]) {
     #endif
 
     // End timer for build time
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration = end - start;
-    std::cout << "Build time: " << duration.count() << " seconds" << std::endl;
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration_ms = t2 - t1;
+    std::cout << "Build time: " << duration_ms.count() / 1000 << " seconds" << std::endl;
 
     // Start timer for query time
-    start = std::chrono::high_resolution_clock::now();
+    t1 = std::chrono::high_resolution_clock::now();
 
     // User wants to calculate total recall
     auto *M = find_medoid(vectors, t);
@@ -177,9 +177,9 @@ int main(int argc, char *argv[]) {
     }
 
     // End timer for query time
-    end = std::chrono::high_resolution_clock::now();
-    duration = end - start;
-    std::cout << "Query time: " << duration.count() << " seconds" << std::endl;
+    t2 = std::chrono::high_resolution_clock::now();
+    duration_ms = t2 - t1;
+    std::cout << "Query time: " << duration_ms.count() / 1000 << " seconds" << std::endl;
 
     // Check if user wants to save the graph
     if (!save_file.empty()) write_vamana_to_file(*g, save_file);
