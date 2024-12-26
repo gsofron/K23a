@@ -7,7 +7,7 @@
 #include "findmedoid.hpp"
 #include "vamana.hpp"
 
-DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold, bool random_graph_flag) {
+DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold, std::unordered_map<float, int> *M, bool random_graph_flag) {
     int n = P.size();
     // Initialize G to an empty or random graph
     DirectedGraph *G; 
@@ -15,7 +15,7 @@ DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold,
     else G = new DirectedGraph(n);
 
     // Start node (index) of every filter
-    auto *st = find_medoid(P, threshold);
+    M = find_medoid(P, threshold);
 
     // Create the random permutation sigma (σ)
     int *sigma = new int[n];
@@ -29,7 +29,7 @@ DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold,
 
     for (int i = 0; i < n; i++) {
         float Fx = P.filters[sigma[i]]; // Filter of current index
-        int s = st->at(Fx); // Medoid point of this filter
+        int s = M->at(Fx); // Medoid point of this filter
 
         auto V_Fx = FilteredGreedySearch(*G, P, s, sigma[i], 0, L).second;
         filtered_robust_prune(G, P, sigma[i], V_Fx, a, R);
@@ -50,7 +50,6 @@ DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold,
     }
 
     delete[] sigma;
-    delete st;
 
     return G;
 }
