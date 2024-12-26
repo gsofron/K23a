@@ -69,37 +69,42 @@ int main(int argc, char *argv[]) {
     vectors.read_queries(query_file, query_vectors_num);
 
     // Start timer for build time
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto build_time_start = std::chrono::high_resolution_clock::now();
 
     DirectedGraph *g;
+    std::unordered_map<float, int> *M = nullptr;
     // If user gave vamana file, use it to initialize the graph
     if (!vamana_file.empty()) g = read_vamana_from_file(vamana_file);
     // Else, initialize graph g with FilteredVamana or StitchedVamana accordingly for each executable
     #ifdef FILTERED_VAMANA
-    else g = filtered_vamana(vectors, a, L, R, t, random_graph_flag);
+    else g = filtered_vamana(vectors, a, L, R, t, M, random_graph_flag);
     #else
     else g = stitched_vamana(vectors, a, L_small, R_small, R_stitched, random_graph_flag, random_medoid_flag, random_subset_medoid_flag);
     #endif
 
     // End timer for build time
-    auto t2 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> duration_ms = t2 - t1;
-    std::cout << "Build time: " << duration_ms.count() / 1000 << " seconds" << std::endl;
+    auto build_time_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> build_time_ms = build_time_end - build_time_start;
+    std::cout << "Build time: " << build_time_ms.count() / 1000 << " seconds" << std::endl << std::endl;
 
     // Start timer for query time
-    t1 = std::chrono::high_resolution_clock::now();
+    double filtered_time_ms = 0.0;
+    auto query_time_start = std::chrono::high_resolution_clock::now();
 
     // User wants to calculate total recall
-    auto *M = find_medoid(vectors, t);
+    if (M == nullptr) M = find_medoid(vectors, t);
     if (index == -1) {
         int count = 0;
         float recall_sum = 0.0;
         
-        #pragma omp parallel for reduction(+: recall_sum) num_threads(4)
+        #pragma omp parallel for reduction(+: recall_sum, filtered_time_ms) num_threads(4)
         for (int j = 0; j < query_vectors_num; j++) {
             float filter = vectors.filters[j + base_vectors_num];
 
             if (filter != -1 && M->find(filter) == M->end()) continue;
+            
+            // Start timer for a single query
+            auto single_query_start = std::chrono::high_resolution_clock::now();
 
             #pragma omp atomic
             count++;  // Ensuring thread-safe update of shared variable
@@ -134,6 +139,13 @@ int main(int argc, char *argv[]) {
 
             float current_recall = float(common_count) / groundtruth_count;
             recall_sum += current_recall;  // This update is part of the reduction
+
+            // End timer for a single query
+            auto single_query_end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::milli> single_query_time_ms = single_query_end - single_query_start;
+
+            // Increase total query time of filtered queries
+            if (filter != -1) filtered_time_ms += single_query_time_ms.count();
         }
 
         std::cout << "Calculated recall from " << count << " queries" << std::endl;
@@ -177,9 +189,13 @@ int main(int argc, char *argv[]) {
     }
 
     // End timer for query time
-    t2 = std::chrono::high_resolution_clock::now();
-    duration_ms = t2 - t1;
-    std::cout << "Query time: " << duration_ms.count() / 1000 << " seconds" << std::endl;
+    auto query_time_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> query_time_ms = query_time_end - query_time_start;
+    std::cout << std::endl << "Query time: " << query_time_ms.count() / 1000 << " seconds" << std::endl;
+    if (index == -1) {
+        std::cout << "Filtered queries time: " << filtered_time_ms / 1000 << " seconds" << std::endl;
+        std::cout << "Unfiltered queries time: " << (query_time_ms.count() - filtered_time_ms) / 1000 << " seconds" << std::endl;
+    }
 
     // Check if user wants to save the graph
     if (!save_file.empty()) write_vamana_to_file(*g, save_file);
