@@ -92,21 +92,23 @@ int main(int argc, char *argv[]) {
         int count = 0;
         float recall_sum = 0.0;
         
-        for (int j = 0; j < query_vectors_num; j++) { 
+        #pragma omp parallel for reduction(+: recall_sum) num_threads(4)
+        for (int j = 0; j < query_vectors_num; j++) {
             float filter = vectors.filters[j + base_vectors_num];
-            
+
             if (filter != -1 && M->find(filter) == M->end()) continue;
-            
-            count++;
+
+            #pragma omp atomic
+            count++;  // Ensuring thread-safe update of shared variable
 
             std::vector<int> L_set;
             if (filter > -1) {
                 int start = M->at(filter);
-                L_set = FilteredGreedySearch(*g, vectors, start, j+base_vectors_num, K, L).first;
+                L_set = FilteredGreedySearch(*g, vectors, start, j + base_vectors_num, K, L).first;
             } else {
                 std::set<std::pair<float, int>> all_medoids_knn;
                 for (auto pair : *M) {
-                    auto set = FilteredGreedySearch(*g, vectors, pair.second, j+base_vectors_num, K, L).second;
+                    auto set = FilteredGreedySearch(*g, vectors, pair.second, j + base_vectors_num, K, L).second;
 
                     auto start = set.begin();
                     auto end = set.begin();
@@ -122,14 +124,15 @@ int main(int argc, char *argv[]) {
 
             auto groundtruth = vectors.query_solutions(groundtruth_file, j);
             std::sort(groundtruth.begin(), groundtruth.end());
-            while (groundtruth[0] == -1) groundtruth.erase(groundtruth.begin());
+            while (!groundtruth.empty() && groundtruth[0] == -1) groundtruth.erase(groundtruth.begin());
             int groundtruth_count = groundtruth.size();
 
             int common_count = intersect(groundtruth, L_set);
 
             float current_recall = float(common_count) / groundtruth_count;
-            recall_sum += current_recall;
+            recall_sum += current_recall;  // This update is part of the reduction
         }
+
         std::cout << "Calculated recall from " << count << " queries" << std::endl;
         std::cout << "Total Recall Percent: " << 100*recall_sum/count << "%" << std::endl;
     } else {
