@@ -5,11 +5,14 @@
 #include "filtered_robust_prune.hpp"
 #include "filtered_vamana.hpp"
 #include "findmedoid.hpp"
+#include "vamana.hpp"
 
-DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold) {
+DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold, bool random_graph_flag) {
     int n = P.size();
-    // Initialize G to an empty graph
-    DirectedGraph *G = new DirectedGraph(n);
+    // Initialize G to an empty or random graph
+    DirectedGraph *G; 
+    if (random_graph_flag) G = random_graph(n, R);
+    else G = new DirectedGraph(n);
 
     // Start node (index) of every filter
     auto *st = find_medoid(P, threshold);
