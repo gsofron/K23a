@@ -1,0 +1,64 @@
+Execution #1:
+	Build Time: 3.37921 seconds
+	Query Time: 3.67166 seconds
+	Recall: 99.9669 %
+	File size: 684620 bytes
+
+Execution #2:
+	Build Time: 3.46724 seconds
+	Query Time: 3.71535 seconds
+	Recall: 99.9695 %
+	File size: 683332 bytes
+
+Execution #3:
+	Build Time: 3.2911 seconds
+	Query Time: 3.617 seconds
+	Recall: 99.9657 %
+	File size: 684824 bytes
+
+Execution #4:
+	Build Time: 3.3395 seconds
+	Query Time: 3.64288 seconds
+	Recall: 99.9697 %
+	File size: 684696 bytes
+
+Execution #5:
+	Build Time: 3.37107 seconds
+	Query Time: 3.71111 seconds
+	Recall: 99.9621 %
+	File size: 683708 bytes
+
+Execution #6:
+	Build Time: 3.42554 seconds
+	Query Time: 3.74511 seconds
+	Recall: 99.9639 %
+	File size: 684612 bytes
+
+Execution #7:
+	Build Time: 3.34038 seconds
+	Query Time: 3.66346 seconds
+	Recall: 99.9664 %
+	File size: 684596 bytes
+
+Execution #8:
+	Build Time: 3.3881 seconds
+	Query Time: 3.66446 seconds
+	Recall: 99.9662 %
+	File size: 683668 bytes
+
+Execution #9:
+	Build Time: 3.37235 seconds
+	Query Time: 3.61545 seconds
+	Recall: 99.9683 %
+	File size: 683844 bytes
+
+Execution #10:
+	Build Time: 3.34037 seconds
+	Query Time: 3.82802 seconds
+	Recall: 99.9667 %
+	File size: 684140 bytes
+
+Average Build Time: 3.37148 seconds
+Average Query Time: 3.68745 seconds
+Average Recall: 99.96654 %
+Average File size: 684204.00000 bytes
