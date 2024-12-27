@@ -30,6 +30,13 @@
 // time ./stitched -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -s vamana.bin -n 10000 -m 5012 -a 1.1 -L 150 -l 100 -r 32 -R 64 -t 50 -i -1
 // time ./stitched -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -v vamana.bin -s new.bin -n 10000 -m 5012 -a 1.1 -L 150 -l 100 -r 32 -R 64 -t 50 -i -1
 
+// Helper function to return elapsed time in seconds
+float elapsed_time(std::chrono::time_point<std::chrono::high_resolution_clock> start) {
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed_time_ms = end - start;
+    return elapsed_time_ms.count() / 1000;
+}
+
 // Helper function to find common elements between vectors 'vec1' and 'vec2'
 int intersect(const std::vector<int>& vec1, const std::vector<int>& vec2) {
     int count = 0;
@@ -37,6 +44,51 @@ int intersect(const std::vector<int>& vec1, const std::vector<int>& vec2) {
         if (std::find(vec2.begin(), vec2.end(), i) != vec2.end()) count++;
     }
     return count;
+}
+
+// Calculate recall of current filtered query
+float calculate_filtered_recall(float filter, std::unordered_map<float, int> *M, DirectedGraph *g, Vectors& vectors, int j, int base_vectors_num, int L, std::string groundtruth_file) {
+    std::vector<int> L_set;
+    int start = M->at(filter);
+    L_set = FilteredGreedySearch(*g, vectors, start, j + base_vectors_num, K, L).first;
+
+    auto groundtruth = vectors.query_solutions(groundtruth_file, j);
+    std::sort(groundtruth.begin(), groundtruth.end());
+    while (!groundtruth.empty() && groundtruth[0] == -1) groundtruth.erase(groundtruth.begin());
+    int groundtruth_count = groundtruth.size();
+
+    int common_count = intersect(groundtruth, L_set);
+
+    return float(common_count) / groundtruth_count;
+}
+
+// Calculate recall of current unfiltered query
+float calculate_unfiltered_recall(std::unordered_map<float, int> *M, DirectedGraph *g, Vectors& vectors, int j, int base_vectors_num, int L, std::string groundtruth_file) {
+    std::vector<int> L_set;
+
+    std::set<std::pair<float, int>> all_medoids_knn;
+    for (auto pair : *M) {
+        auto set = FilteredGreedySearch(*g, vectors, pair.second, j + base_vectors_num, K, L).second;
+
+        auto start = set.begin();
+        auto end = set.begin();
+        std::advance(end, std::min(K, static_cast<int>(set.size()))); 
+        all_medoids_knn.insert(start, end);
+    }
+
+    auto it = all_medoids_knn.begin();
+    for (int i = 0; i < K && it != all_medoids_knn.end(); i++, it++) {
+        L_set.push_back(it->second);
+    }
+    
+    auto groundtruth = vectors.query_solutions(groundtruth_file, j);
+    std::sort(groundtruth.begin(), groundtruth.end());
+    while (!groundtruth.empty() && groundtruth[0] == -1) groundtruth.erase(groundtruth.begin());
+    int groundtruth_count = groundtruth.size();
+
+    int common_count = intersect(groundtruth, L_set);
+
+    return float(common_count) / groundtruth_count;
 }
 
 int main(int argc, char *argv[]) {
@@ -69,7 +121,7 @@ int main(int argc, char *argv[]) {
     vectors.read_queries(query_file, query_vectors_num);
 
     // Start timer for build time
-    auto build_time_start = std::chrono::high_resolution_clock::now();
+    auto build_start = std::chrono::high_resolution_clock::now();
 
     DirectedGraph *g;
     std::unordered_map<float, int> *M = nullptr;
@@ -83,119 +135,71 @@ int main(int argc, char *argv[]) {
     #endif
 
     // End timer for build time
-    auto build_time_end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> build_time_ms = build_time_end - build_time_start;
-    std::cout << "Build time: " << build_time_ms.count() / 1000 << " seconds" << std::endl << std::endl;
+    std::cout << "Build time: " << elapsed_time(build_start) << " seconds" << std::endl << std::endl;
 
-    // Start timer for query time
-    double filtered_time_ms = 0.0;
-    auto query_time_start = std::chrono::high_resolution_clock::now();
+    // Initialize medoid map if it wasn't aready initialized
+    if (M == nullptr) M = find_medoid(vectors, t);
+
+    // Start timer for total query time
+    auto total_query_start = std::chrono::high_resolution_clock::now();
 
     // User wants to calculate total recall
-    if (M == nullptr) M = find_medoid(vectors, t);
     if (index == -1) {
-        int count = 0;
-        float recall_sum = 0.0;
+        int count = 0, filtered_count = 0, unfiltered_count = 0;
+        float recall_sum = 0.0, filtered_recall_sum = 0.0, unfiltered_recall_sum = 0.0;
         
-        #pragma omp parallel for reduction(+: recall_sum, filtered_time_ms) num_threads(4)
+        // Filtered Queries
+        auto filtered_queries_start = std::chrono::high_resolution_clock::now();
+        #pragma omp parallel for num_threads(4) \
+        reduction(+: recall_sum, count, filtered_recall_sum, filtered_count)
         for (int j = 0; j < query_vectors_num; j++) {
             float filter = vectors.filters[j + base_vectors_num];
-
-            if (filter != -1 && M->find(filter) == M->end()) continue;
+            if (filter == -1 || M->find(filter) == M->end()) continue;
             
-            // Start timer for a single query
-            auto single_query_start = std::chrono::high_resolution_clock::now();
-
-            #pragma omp atomic
-            count++;  // Ensuring thread-safe update of shared variable
-
-            std::vector<int> L_set;
-            if (filter > -1) {
-                int start = M->at(filter);
-                L_set = FilteredGreedySearch(*g, vectors, start, j + base_vectors_num, K, L).first;
-            } else {
-                std::set<std::pair<float, int>> all_medoids_knn;
-                for (auto pair : *M) {
-                    auto set = FilteredGreedySearch(*g, vectors, pair.second, j + base_vectors_num, K, L).second;
-
-                    auto start = set.begin();
-                    auto end = set.begin();
-                    std::advance(end, std::min(K, static_cast<int>(set.size()))); 
-                    all_medoids_knn.insert(start, end);
-                }
-
-                auto it = all_medoids_knn.begin();
-                for (int i = 0; i < K && it != all_medoids_knn.end(); i++, it++) {
-                    L_set.push_back(it->second);
-                }
-            }
-
-            auto groundtruth = vectors.query_solutions(groundtruth_file, j);
-            std::sort(groundtruth.begin(), groundtruth.end());
-            while (!groundtruth.empty() && groundtruth[0] == -1) groundtruth.erase(groundtruth.begin());
-            int groundtruth_count = groundtruth.size();
-
-            int common_count = intersect(groundtruth, L_set);
-
-            float current_recall = float(common_count) / groundtruth_count;
-            recall_sum += current_recall;  // This update is part of the reduction
-
-            // End timer for a single query
-            auto single_query_end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> single_query_time_ms = single_query_end - single_query_start;
-
-            // Increase total query time of filtered queries
-            if (filter != -1) filtered_time_ms += single_query_time_ms.count();
+            float current_recall = calculate_filtered_recall(filter, M, g, vectors, j, base_vectors_num, L, groundtruth_file);
+            
+            // These updates are part of the reduction
+            count++;
+            recall_sum += current_recall;
+            filtered_count++;
+            filtered_recall_sum += current_recall;
         }
+        std::cout << "Filtered queries time: " << elapsed_time(filtered_queries_start) << std::endl;
+        std::cout << "Filtered queries recall: " << 100*filtered_recall_sum/filtered_count << "%" << std::endl << std::endl;
+
+        // Unfiltered Queries
+        auto unfiltered_queries_start = std::chrono::high_resolution_clock::now();
+        #pragma omp parallel for num_threads(4) \
+        reduction(+: recall_sum, count, unfiltered_recall_sum, unfiltered_count)
+        for (int j = 0; j < query_vectors_num; j++) {
+            float filter = vectors.filters[j + base_vectors_num];
+            if (filter != -1) continue;
+            
+            float current_recall = calculate_unfiltered_recall(M, g, vectors, j, base_vectors_num, L, groundtruth_file);
+            
+            // These updates are part of the reduction
+            count++;
+            recall_sum += current_recall;
+            unfiltered_count++;
+            unfiltered_recall_sum += current_recall;
+        }
+        std::cout << "Unfiltered queries time: " << elapsed_time(unfiltered_queries_start) << std::endl;
+        std::cout << "Unfiltered queries recall: " << 100*unfiltered_recall_sum/unfiltered_count << "%" << std::endl << std::endl;
 
         std::cout << "Calculated recall from " << count << " queries" << std::endl;
-        std::cout << "Total Recall Percent: " << 100*recall_sum/count << "%" << std::endl;
+        std::cout << "Total Recall Percent: " << 100*recall_sum/count << "%" << std::endl << std::endl;
     } else {
         float filter = vectors.filters[index + base_vectors_num];
-            
         if (filter != -1 && M->find(filter) == M->end()) std::cout << "This query's filter does not match with any filter of the base vectors" << std::endl;;
         
-
-        std::vector<int> L_set;
-        if (filter > -1) {
-            int start = M->at(filter);
-            L_set = FilteredGreedySearch(*g, vectors, start, index+base_vectors_num, K, L).first;
-        } else {
-            std::set<std::pair<float, int>> all_medoids_knn;
-            for (auto pair : *M) {
-                auto set = FilteredGreedySearch(*g, vectors, pair.second, index+base_vectors_num, K, L).second;
-
-                auto start = set.begin();
-                auto end = set.begin();
-                std::advance(end, std::min(K, static_cast<int>(set.size()))); 
-                all_medoids_knn.insert(start, end);
-            }
-
-            auto it = all_medoids_knn.begin();
-            for (int i = 0; i < K && it != all_medoids_knn.end(); i++, it++) {
-                L_set.push_back(it->second);
-            }
-        }
-
-        auto groundtruth = vectors.query_solutions(groundtruth_file, index);
-        std::sort(groundtruth.begin(), groundtruth.end());
-        while (groundtruth[0] == -1) groundtruth.erase(groundtruth.begin());
-        int groundtruth_count = groundtruth.size();
-
-        int common_count = intersect(groundtruth, L_set);
-
-        float current_recall = float(common_count) / groundtruth_count;
+        float current_recall;
+        if (filter != -1) current_recall = calculate_filtered_recall(filter, M, g, vectors, index, base_vectors_num, L, groundtruth_file);
+        else current_recall = calculate_unfiltered_recall(M, g, vectors, index, base_vectors_num, L, groundtruth_file);
         std::cout << "Current recall is: " << 100*current_recall << "%" << std::endl;
     }
 
-    // End timer for query time
-    auto query_time_end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> query_time_ms = query_time_end - query_time_start;
-    std::cout << std::endl << "Query time: " << query_time_ms.count() / 1000 << " seconds" << std::endl;
-    if (index == -1) {
-        std::cout << "Filtered queries time: " << filtered_time_ms / 1000 << " seconds" << std::endl;
-        std::cout << "Unfiltered queries time: " << (query_time_ms.count() - filtered_time_ms) / 1000 << " seconds" << std::endl;
-    }
+    // End timer for total query time
+    std::cout << "Total query time: " << elapsed_time(total_query_start) << " seconds" << std::endl << std::endl;
 
     // Check if user wants to save the graph
     if (!save_file.empty()) write_vamana_to_file(*g, save_file);
