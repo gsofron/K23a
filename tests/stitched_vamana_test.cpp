@@ -15,7 +15,7 @@ void test_stitched_vamana(void) {
     Vectors vectors = Vectors(NUM_OF_ENTRIES, 0);
 
     // Create the Vamana graph
-    DirectedGraph *g = stitched_vamana(vectors, A, L, R_SMALL, R_STITCHED);
+    DirectedGraph *g = stitched_vamana(vectors, A, L, R_SMALL, R_STITCHED, false, false, false);
 
     // Test the out-degree of each vertex. It should be <= R
     int n = vectors.size();

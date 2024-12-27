@@ -56,12 +56,49 @@ int medoid(Vectors& vectors, int *Pf, int n) {
     return m;
 }
 
-DirectedGraph *vamana(Vectors& P, int *Pf, int n, float a, int L, int R) {
+// Returns a completely random medoid
+int random_medoid(int n) {
+    srand(time(NULL));
+    return rand() % n;
+}
+
+// Returns the medoid of a random subset of Pf
+int random_subset_medoid(Vectors& vectors, int *Pf, int n) {
+    // Create a copy of Pf and shuffle it
+    int *Pf_shuffled = new int[n];
+    for (int i = 0 ; i < n ; i++) {
+        Pf_shuffled[i] = Pf[i];
+    }
+    auto rd = std::random_device {}; 
+    auto rng = std::default_random_engine { rd() };
+    std::shuffle(Pf_shuffled, Pf_shuffled + n, rng);
+
+    // Randomly get the size of the new subset
+    srand(time(NULL));
+    int subset_size = rand() % n + 1;
+
+    // Get a random subset
+    int *Pf_subset = new int[subset_size];
+    for (int i = 0 ; i < subset_size ; i++) {
+        Pf_subset[i] = Pf_shuffled[i];
+    }
+
+    // Find medoid of random subset and return it
+    int random_medoid = medoid(vectors, Pf_subset, subset_size);
+    delete [] Pf_subset;
+    delete [] Pf_shuffled;
+    return random_medoid;
+}
+
+DirectedGraph *vamana(Vectors& P, int *Pf, int n, float a, int L, int R, bool random_medoid_flag, bool random_subset_medoid_flag) {
     // Init the R-regular (counting out-degree only) graph
     DirectedGraph *G = random_graph(n, R);
     
-    // Init Pf's medoid
-    int s = medoid(P, Pf, n);
+    // Init medoid
+    int s;
+    if (!random_medoid_flag && !random_subset_medoid_flag) s = medoid(P, Pf, n);
+    else if (random_medoid_flag) s = random_medoid(n);
+    else s = random_subset_medoid(P, Pf, n);
 
     // Create the random permutation sigma (σ)
     int *sigma = new int[n];

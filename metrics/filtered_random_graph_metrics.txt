@@ -1,0 +1,18 @@
+Execution #1:
+	Build Time: 4.71451 seconds
+	Filtered Queries Time: 0.51299 seconds
+	Filtered Queries Recall: 99.5742 %
+	Unfiltered Queries Time: 26.9591 seconds
+	Unfiltered Queries Recall: 98.5098 %
+	Total Recall: 99.0398 %
+	Total Query Time: 27.4723 seconds
+	File size: 488028 bytes
+
+Average Build Time: 4.71451 seconds
+Average Filtered Queries Time: .51299 seconds
+Average Filtered Queries Recall: 99.57420 %
+Average Unfiltered Queries Time: 26.95910 seconds
+Average Unfiltered Queries Recall: 98.50980 %
+Average Recall: 99.03980 %
+Average Query Time: 27.47230 seconds
+Average File size: 488028.00000 bytes

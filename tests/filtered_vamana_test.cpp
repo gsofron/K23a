@@ -13,7 +13,7 @@ void test_filtered_vamana(void) {
     Vectors vectors = Vectors(NUM_OF_ENTRIES, 0);
 
     // Create the Filtered Vamana graph
-    DirectedGraph *g = filtered_vamana(vectors, A, L, R, T);
+    DirectedGraph *g = filtered_vamana(vectors, A, L, R, T, nullptr, false);
 
     // Test the out-degree of each vertex. It should be <= R
     int n = vectors.size();
