@@ -63,12 +63,12 @@ float calculate_filtered_recall(float filter, std::unordered_map<float, int> *M,
 }
 
 // Calculate recall of current unfiltered query
-float calculate_unfiltered_recall(std::unordered_map<float, int> *M, DirectedGraph *g, Vectors& vectors, int j, int base_vectors_num, int L, std::string groundtruth_file) {
+float calculate_unfiltered_recall(std::unordered_map<float, int> *M, DirectedGraph *g, Vectors& vectors, int j, int base_vectors_num, int L, std::string groundtruth_file, int limit) {
     std::vector<int> L_set;
 
     std::set<std::pair<float, int>> all_medoids_knn;
     for (auto pair : *M) {
-        auto set = FilteredGreedySearch(*g, vectors, pair.second, j + base_vectors_num, K, L).second;
+        auto set = FilteredGreedySearch(*g, vectors, pair.second, j + base_vectors_num, K, L, limit).second;
 
         auto start = set.begin();
         auto end = set.begin();
@@ -96,12 +96,14 @@ int main(int argc, char *argv[]) {
 
     // Common command line parameters
     std::string base_file, query_file, groundtruth_file, vamana_file = "", save_file = "";
-    int base_vectors_num, query_vectors_num, L, t, index;
+    int base_vectors_num, query_vectors_num, L, t, index, limit = std::numeric_limits<int>::max();
     float a;
     bool random_graph_flag = false;
 
-    int R;                              // Extra parameters for filtered Vamana
-    int L_small, R_small, R_stitched;   // Extra parameters for stitched Vamana
+    // Extra parameter for filtered Vamana
+    int R;
+    // Extra parameters for stitched Vamana
+    int L_small, R_small, R_stitched;
     bool random_medoid_flag = false, random_subset_medoid_flag = false;
     // We (void) these variables so we don't get unused variable warning
     (void)R; (void)L_small; (void)R_small; (void)R_stitched; (void)random_medoid_flag; (void)random_subset_medoid_flag;
@@ -109,11 +111,11 @@ int main(int argc, char *argv[]) {
     // Parse command line arguements differently for each executable
     #ifdef FILTERED_VAMANA
     parse_filtered(VEC_DIMENSION, K, argc, argv, base_file, query_file, groundtruth_file, vamana_file, save_file, \
-                   base_vectors_num, query_vectors_num, a, L, t, index, R, random_graph_flag);
+                   base_vectors_num, query_vectors_num, a, L, t, index, R, random_graph_flag, limit);
     #else
     parse_stitched(VEC_DIMENSION, K, argc, argv, base_file, query_file, groundtruth_file, vamana_file, save_file, base_vectors_num, \
                    query_vectors_num, a, L, t, index, L_small, R_small, R_stitched, \
-                   random_graph_flag, random_medoid_flag, random_subset_medoid_flag);
+                   random_graph_flag, random_medoid_flag, random_subset_medoid_flag, limit);
     #endif
 
     // Load base and queries vectors
@@ -175,7 +177,7 @@ int main(int argc, char *argv[]) {
             float filter = vectors.filters[j + base_vectors_num];
             if (filter != -1) continue;
             
-            float current_recall = calculate_unfiltered_recall(M, g, vectors, j, base_vectors_num, L, groundtruth_file);
+            float current_recall = calculate_unfiltered_recall(M, g, vectors, j, base_vectors_num, L, groundtruth_file, limit);
             
             // These updates are part of the reduction
             count++;
@@ -194,7 +196,7 @@ int main(int argc, char *argv[]) {
         
         float current_recall;
         if (filter != -1) current_recall = calculate_filtered_recall(filter, M, g, vectors, index, base_vectors_num, L, groundtruth_file);
-        else current_recall = calculate_unfiltered_recall(M, g, vectors, index, base_vectors_num, L, groundtruth_file);
+        else current_recall = calculate_unfiltered_recall(M, g, vectors, index, base_vectors_num, L, groundtruth_file, limit);
         std::cout << "Current recall is: " << 100*current_recall << "%" << std::endl;
     }
 
