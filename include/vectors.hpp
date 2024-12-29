@@ -12,8 +12,8 @@
 
 class Vectors {
 private:
-    float **vectors;             // Stores all vectors
-    float **dist_matrix;        // Cache for Euclidean distances
+    float **vectors;            // Stores all vectors
+    float *dist_matrix;         // Cache for Euclidean distances
     int base_size;              // Number of vectors
     int dimention;              // Dimension of each vector
     int queries;                // Number of queries
@@ -41,6 +41,9 @@ public:
 
     // Calculate Euclidean distance between two vectors
     float euclidean_distance(int index1, int index2);
+
+    // Call only if sure that the distance has been cached
+    float euclidean_distance_direct_cache(int index1, int index2);
 
     // Load queries from a file
     void read_queries(const std::string& file_name, int read_num); 
