@@ -6,9 +6,14 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-./scripts/metrics-filtered.sh $1 ./metrics/filtered_metrics.txt 0
-./scripts/metrics-filtered.sh $1 ./metrics/filtered_random_graph_metrics.txt 1
-./scripts/metrics-stitched.sh $1 ./metrics/stitched_metrics.txt 0 0
-./scripts/metrics-stitched.sh $1 ./metrics/stitched_random_medoid_metrics.txt 0 1
-./scripts/metrics-stitched.sh $1 ./metrics/stitched_random_subset_medoid_metrics.txt 0 2
-./scripts/metrics-stitched.sh $1 ./metrics/stitched_random_graph_metrics.txt 1 0
+# ./scripts/metrics-filtered.sh $1 ./metrics/filtered/default.txt
+# ./scripts/metrics-filtered.sh $1 ./metrics/filtered/random_graph.txt --random-graph
+# ./scripts/metrics-filtered.sh $1 ./metrics/filtered/limit.txt --limit 40
+# ./scripts/metrics-filtered.sh $1 ./metrics/filtered/random_graph_limit.txt --random-graph --limit 40
+
+./scripts/metrics-stitched.sh $1 ./metrics/stitched/default.txt
+./scripts/metrics-stitched.sh $1 ./metrics/stitched/random_graph.txt --random-graph
+./scripts/metrics-stitched.sh $1 ./metrics/stitched/random_medoid.txt --random-medoid
+./scripts/metrics-stitched.sh $1 ./metrics/stitched/random_subset_medoid.txt --random-subset-medoid
+./scripts/metrics-stitched.sh $1 ./metrics/stitched/limit.txt --limit 40
+./scripts/metrics-stitched.sh $1 ./metrics/stitched/random_graph_limit.txt --random-graph --limit 40
