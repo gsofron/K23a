@@ -1,14 +1,14 @@
 #!/bin/bash
-# ./scripts/metrics-stitched.sh 10 ./metrics/stitched_metrics.txt 0 0
-# ./scripts/metrics-stitched.sh 10 ./metrics/stitched_random_medoid_metrics.txt 0 1
-# ./scripts/metrics-stitched.sh 10 ./metrics/stitched_random_subset_medoid_metrics.txt 0 2
-# ./scripts/metrics-stitched.sh 10 ./metrics/stitched_random_graph_metrics.txt 1 0
-# ./scripts/metrics-stitched.sh 10 ./metrics/stitched_random_graph_random_medoid_metrics.txt 1 1
-# ./scripts/metrics-stitched.sh 10 ./metrics/stitched_random_graph_random_subset_medoid_metrics.txt 1 2
+# ./scripts/metrics-stitched.sh 10 ./metrics/stitched/default.txt
+# ./scripts/metrics-stitched.sh 10 ./metrics/stitched/random_graph.txt --random-graph
+# ./scripts/metrics-stitched.sh 10 ./metrics/stitched/random_medoid.txt --random-medoid
+# ./scripts/metrics-stitched.sh 10 ./metrics/stitched/random_subset_medoid.txt --random-subset-medoid
+# ./scripts/metrics-stitched.sh 10 ./metrics/stitched/limit.txt --limit 40
+# ./scripts/metrics-stitched.sh 10 ./metrics/stitched/random_graph_limit.txt --random-graph --limit 40
 
-# Check if all arguments are provided
-if [ $# -ne 4 ]; then
-    echo "Usage: $0 <number of loops> <filename> <random graph flag> <medoid flag>"
+# Check if all mandatory arguments are provided
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 <number of loops> <filename> [flags...]"
     exit 1
 fi
 
@@ -18,32 +18,16 @@ if ! [[ "$1" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
-# Check if the third argument is strictly 0 or 1
-if [ "$3" -ne 0 ] && [ "$3" -ne 1 ]; then
-    echo "Error: Random graph flag must be 0 or 1."
-    exit 1
-fi
-
-# Check if the fourth argument is strictly 0, 1 or 2
-if [ "$3" -ne 0 ] && [ "$3" -ne 1 ] && [ "$3" -ne 2 ]; then
-    echo "Error: Medoid flag must be 0, 1 or 2."
-    exit 1
-fi
-
 # Initialize variables
 count=$1
 filename=$2
 >$filename
 
 command="./stitched -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -s vamana.bin -n 10000 -m 5012 -a 1.1 -L 150 -l 100 -r 32 -R 64 -t 50 -i -1"
-if [ "$3" -eq 1 ]; then
-   command+=" --random-graph"
-fi
-if [ "$4" -eq 1 ]; then
-   command+=" --random-medoid"
-elif [ "$4" -eq 2 ]; then
-    command+=" --random-subset-medoid"
-fi
+# Loop through flags
+for (( i=3; i<=$#; i++ )); do
+    command+=" ${!i}"
+done
 
 build_time_sum=0
 filtered_queries_time_sum=0

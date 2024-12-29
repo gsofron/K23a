@@ -1,10 +1,12 @@
 #!/bin/bash
-# ./scripts/metrics-filtered.sh 10 ./metrics/filtered_metrics.txt 0
-# ./scripts/metrics-filtered.sh 10 ./metrics/filtered_random_graph_metrics.txt 1
+# ./scripts/metrics-filtered.sh 10 ./metrics/filtered/default.txt
+# ./scripts/metrics-filtered.sh 10 ./metrics/filtered/random_graph.txt --random-graph
+# ./scripts/metrics-filtered.sh 10 ./metrics/filtered/limit.txt --limit 40
+# ./scripts/metrics-filtered.sh 10 ./metrics/filtered/random_graph_limit.txt --random-graph --limit 40
 
-# Check if all arguments are provided
-if [ $# -ne 3 ]; then
-    echo "Usage: $0 <number of loops> <filename> <random graph flag>"
+# Check if all mandatory arguments are provided
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 <number of loops> <filename> [flags...]"
     exit 1
 fi
 
@@ -14,21 +16,16 @@ if ! [[ "$1" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
-# Check if the third argument is strictly 0 or 1
-if [ "$3" -ne 0 ] && [ "$3" -ne 1 ]; then
-    echo "Error: Random graph flag must be 0 or 1."
-    exit 1
-fi
-
 # Initialize variables
 count=$1
 filename=$2
 >$filename
 
 command="./filtered -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -s vamana.bin -n 10000 -m 5012 -a 1.1 -L 150 -R 12 -t 50 -i -1"
-if [ "$3" -eq 1 ]; then
-   command+=" --random-graph"
-fi
+# Loop through flags
+for (( i=3; i<=$#; i++ )); do
+    command+=" ${!i}"
+done
 
 build_time_sum=0
 filtered_queries_time_sum=0

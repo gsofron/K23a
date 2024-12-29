@@ -22,10 +22,12 @@ void print_usage() {
     #endif
     std::cerr << "-t <tau>" << std::endl;
     std::cerr << "-i <query index> (use -1 to calculate total recall)" << std::endl;
+    
     std::cerr << "---OPTIONAL FLAGS---" << std::endl;
     std::cerr << "-v <vamana file>" << std::endl;
     std::cerr << "-s <save file>" << std::endl;
     std::cerr << "--random-graph" << std::endl;
+    std::cerr << "--limit <unfiltered queries search limit>" << std::endl;
     #ifndef FILTERED_VAMANA
     std::cerr << "--random-medoid" << std::endl;
     std::cerr << "--random-subset-medoid" << std::endl;
@@ -35,14 +37,14 @@ void print_usage() {
 // Parse input arguments for FilteredVamana
 void parse_filtered(int vec_dimension, int k, int argc, char *argv[], std::string &base_file, std::string &query_file, std::string &groundtruth_file, \
                       std::string &vamana_file, std::string &save_file, int &base_vectors_num, int &query_vectors_num, \
-                      float &a, int &L, int &t, int &index, int &R, bool &random_graph_flag) {
+                      float &a, int &L, int &t, int &index, int &R, bool &random_graph_flag, int &limit) {
     // Common command line mandatory flags
     bool base_file_flag = false, query_file_flag = false, groundtruth_file_flag = false, base_vectors_num_flag = false, \
          query_vectors_num_flag = false, a_flag = false, L_flag = false, t_flag = false, index_flag = false;
     bool R_flag = false;    // Extra mandatory flag for FilteredVamana
          
-    // For FilteredVamana, minimum arguements are 21 and maximum are 26
-    if (argc < 21 || argc > 26) {
+    // For FilteredVamana, minimum arguements are 21 and maximum are 28
+    if (argc < 21 || argc > 28) {
         print_usage();
         exit(EXIT_FAILURE);
     }
@@ -50,6 +52,7 @@ void parse_filtered(int vec_dimension, int k, int argc, char *argv[], std::strin
     // Define long options
     struct option long_options[] = {
         {"random-graph", no_argument, nullptr, 1},
+        {"limit", required_argument, nullptr, 2},
         {nullptr, 0, nullptr, 0}    // Terminating null entry
     };
 
@@ -147,6 +150,13 @@ void parse_filtered(int vec_dimension, int k, int argc, char *argv[], std::strin
         case 1: // Init graph with random edges
             random_graph_flag = true;
             break;
+        case 2: // Set search limit for unfiltered queries
+            limit = std::stoi(optarg);
+            if (limit <= 0) {
+                std::cerr << "limit must be positive" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
         default:
             print_usage();
             exit(EXIT_FAILURE);
@@ -188,7 +198,8 @@ void parse_filtered(int vec_dimension, int k, int argc, char *argv[], std::strin
     std::cout << "R = " << R << std::endl;
     std::cout << "t = " << t << std::endl;
     std::cout << "index = " << index << std::endl;
-    std::cout << "random_graph_flag = " << random_graph_flag << std::endl;
+    if (random_graph_flag) std::cout << "Using random graph for FilteredVamana initialization" << std::endl;
+    if (limit != std::numeric_limits<int>::max()) std::cout << "Using unfiltered query limit: " << limit << std::endl;
     std::cout << std::endl;
 }
 
@@ -196,15 +207,15 @@ void parse_filtered(int vec_dimension, int k, int argc, char *argv[], std::strin
 void parse_stitched(int vec_dimension, int k, int argc, char *argv[], std::string &base_file, std::string &query_file, std::string &groundtruth_file, \
                       std::string &vamana_file, std::string &save_file, int &base_vectors_num, int &query_vectors_num, \
                       float &a, int &L, int &t, int &index, int &L_small, int &R_small, int &R_stitched, \
-                      bool &random_graph_flag, bool &random_medoid_flag, bool &random_subset_medoid_flag) {
+                      bool &random_graph_flag, bool &random_medoid_flag, bool &random_subset_medoid_flag, int &limit) {
     // Common command line mandatory flags
     bool base_file_flag = false, query_file_flag = false, groundtruth_file_flag = false, base_vectors_num_flag = false, \
          query_vectors_num_flag = false, a_flag = false, L_flag = false, t_flag = false, index_flag = false;
     bool L_small_flag = false, R_small_flag = false, R_stitched_flag = false;   // Extra mandatory flags for FilteredVamana
          
 
-    // For StitchedVamana, minimum arguements are 25 and maximum are 31
-    if (argc < 25 || argc > 31) {
+    // For StitchedVamana, minimum arguements are 25 and maximum are 33
+    if (argc < 25 || argc > 33) {
         print_usage();
         exit(EXIT_FAILURE);
     }
@@ -214,6 +225,7 @@ void parse_stitched(int vec_dimension, int k, int argc, char *argv[], std::strin
         {"random-graph", no_argument, nullptr, 1},
         {"random-medoid", no_argument, nullptr, 2},
         {"random-subset-medoid", no_argument, nullptr, 3},
+        {"limit", required_argument, nullptr, 4},
         {nullptr, 0, nullptr, 0}    // Terminating null entry
     };
 
@@ -333,6 +345,13 @@ void parse_stitched(int vec_dimension, int k, int argc, char *argv[], std::strin
         case 3: // Use a medoid of a random subset for Vamana
             random_subset_medoid_flag = true;
             break;
+        case 4: // Set search limit for unfiltered queries
+            limit = std::stoi(optarg);
+            if (limit <= 0) {
+                std::cerr << "limit must be positive" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            break;
         default:
             print_usage();
             exit(EXIT_FAILURE);
@@ -375,8 +394,9 @@ void parse_stitched(int vec_dimension, int k, int argc, char *argv[], std::strin
     std::cout << "Rstitched = " << R_stitched << std::endl;
     std::cout << "t = " << t << std::endl;
     std::cout << "index = " << index << std::endl;
-    std::cout << "random_graph_flag = " << random_graph_flag << std::endl;
-    std::cout << "random_medoid_flag = " << random_medoid_flag << std::endl;
-    std::cout << "random_subset_medoid_flag = " << random_subset_medoid_flag << std::endl;
+    if (random_graph_flag) std::cout << "Using random graph for StitchedVamana initialization" << std::endl;
+    if (random_medoid_flag) std::cout << "Using random medoid for FindMedoid initialization" << std::endl;
+    if (random_subset_medoid_flag) std::cout << "Using a random subset of medoids for FindMedoid initialization" << std::endl;
+    if (limit != std::numeric_limits<int>::max()) std::cout << "Using unfiltered query limit: " << limit << std::endl;
     std::cout << std::endl;
 }
