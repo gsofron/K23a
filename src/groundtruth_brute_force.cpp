@@ -48,13 +48,13 @@ int main(int argc, char *argv[]) {
     }
 
     // Read number of data vectors
-    int data_vecs_num;
+    u_int32_t data_vecs_num;
     std::ifstream data_file(argv[1], std::ios::binary);
     data_file.read(reinterpret_cast<char*>(&data_vecs_num), sizeof(data_vecs_num));
     data_file.close();
 
     // Read number of query vectors
-    int query_vecs_num;
+    u_int32_t query_vecs_num;
     std::ifstream queries_file(argv[2], std::ios::binary);
     queries_file.read(reinterpret_cast<char*>(&query_vecs_num), sizeof(query_vecs_num));
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     // NOTE: Vector constructor doesn't save queries that contain timestamp in order to maximize spatial effiency
     Vectors vectors(argv[1], VEC_DIMENSION, data_vecs_num, query_vecs_num);
     vectors.read_queries(argv[2], query_vecs_num);
-    
+
     // Create output file
     std::ofstream groundtruth_file(argv[3], std::ios::binary);
     if (!groundtruth_file) throw std::runtime_error("Error opening file: " + (std::string)argv[3]);

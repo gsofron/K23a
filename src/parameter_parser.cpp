@@ -1,6 +1,7 @@
 #include <fstream>      // ifstream
 #include <getopt.h>     // getopt_long
 #include <iostream>
+#include <limits>
 
 // Print usage in cerr
 void print_usage() {
