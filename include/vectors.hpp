@@ -12,8 +12,7 @@
 
 class Vectors {
 private:
-    float **vectors;             // Stores all vectors
-    float **dist_matrix;        // Cache for Euclidean distances
+    float **vectors;            // Stores all vectors
     int base_size;              // Number of vectors
     int dimention;              // Dimension of each vector
     int queries;                // Number of queries

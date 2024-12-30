@@ -56,7 +56,7 @@ void test_vamana(void) {
     }
 
     // Create the Vamana graph
-    DirectedGraph *g = vamana(vectors, Pf, NUM_OF_ENTRIES, A, L, R);
+    DirectedGraph *g = vamana(vectors, Pf, NUM_OF_ENTRIES, A, L, R, false, false);
 
     // Test the out-degree of each vertex. It should be <= R
     int n = vectors.size();
@@ -75,7 +75,7 @@ void test_read_and_write_file(void) {
     for (int i = 0 ; i < NUM_OF_ENTRIES ; i++) {
         Pf[i] = i;
     }
-    DirectedGraph *g1 = vamana(vectors, Pf, NUM_OF_ENTRIES, A, L, R);
+    DirectedGraph *g1 = vamana(vectors, Pf, NUM_OF_ENTRIES, A, L, R, false, false);
 
     const std::string file_name = "build/test_vamana_file";
 

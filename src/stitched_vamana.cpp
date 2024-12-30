@@ -2,10 +2,12 @@
 #include "filtered_robust_prune.hpp"
 #include "vamana.hpp"
 
-DirectedGraph *stitched_vamana(Vectors& P, float a, int L_small, int R_small, int R_stitched) {
+DirectedGraph *stitched_vamana(Vectors& P, float a, int L_small, int R_small, int R_stitched, bool random_graph_flag, bool random_medoid_flag, bool random_subset_medoid_flag) {
     int n = P.size();
-    // Initialize G to an empty graph
-    DirectedGraph *G = new DirectedGraph(n);
+    // Initialize G to an empty or random graph
+    DirectedGraph *G; 
+    if (random_graph_flag) G = random_graph(n, R_stitched);
+    else G = new DirectedGraph(n);
 
     // For each filter find the corresponding graph and stitch them together
     int filters_size = P.filters_map.size();
@@ -28,7 +30,8 @@ DirectedGraph *stitched_vamana(Vectors& P, float a, int L_small, int R_small, in
         for (int value : list) {
             P_f[index++] = value;
         }
-        DirectedGraph *G_f = vamana(P, P_f, index, a, L_small, R_small);
+
+        DirectedGraph *G_f = vamana(P, P_f, index, a, L_small, R_small, random_medoid_flag, random_subset_medoid_flag);
         #pragma omp critical
         {
             G->stitch(G_f, P_f);

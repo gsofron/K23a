@@ -4,7 +4,7 @@ SRC_DIR := ../src
 TEST_DIR := .
 
 CXX = g++
-CXXFLAGS = -g -Wall -Wextra -std=c++17 -fopenmp $(addprefix -I,$(INC_DIRS))
+CXXFLAGS = -g -Wall -Wextra -std=c++17 -fopenmp -ftree-vectorize -march=native $(addprefix -I,$(INC_DIRS))
 
 all: ../directed_graph_test ../vectors_test \
      ../greedy_search_test ../filtered_greedy_search_test \
@@ -37,7 +37,7 @@ all: ../directed_graph_test ../vectors_test \
 ../findmedoid_test: $(BUILD_DIR)/findmedoid_test.o $(BUILD_DIR)/findmedoid.o $(BUILD_DIR)/vectors.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-../filtered_vamana_test: $(BUILD_DIR)/filtered_vamana_test.o $(BUILD_DIR)/filtered_vamana.o $(BUILD_DIR)/vectors.o $(BUILD_DIR)/directed_graph.o $(BUILD_DIR)/findmedoid.o $(BUILD_DIR)/filtered_greedy_search.o $(BUILD_DIR)/filtered_robust_prune.o
+../filtered_vamana_test: $(BUILD_DIR)/filtered_vamana_test.o $(BUILD_DIR)/filtered_vamana.o $(BUILD_DIR)/vectors.o $(BUILD_DIR)/directed_graph.o $(BUILD_DIR)/findmedoid.o $(BUILD_DIR)/filtered_greedy_search.o $(BUILD_DIR)/filtered_robust_prune.o $(BUILD_DIR)/vamana.o $(BUILD_DIR)/robust_prune.o $(BUILD_DIR)/greedy_search.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 ../stitched_vamana_test: $(BUILD_DIR)/stitched_vamana_test.o $(BUILD_DIR)/directed_graph.o $(BUILD_DIR)/stitched_vamana.o  $(BUILD_DIR)/vamana.o $(BUILD_DIR)/vectors.o $(BUILD_DIR)/filtered_robust_prune.o $(BUILD_DIR)/robust_prune.o $(BUILD_DIR)/greedy_search.o
