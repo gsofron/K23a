@@ -56,7 +56,7 @@ FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int start, int quer
     // Add the deleted visited indeces to L_set
     for (size_t i = 0; i < vectors_size; i++) {
         if (visited[i]) {
-            L_set.insert({vectors.euclidean_distance_direct_cache(query, i), i});
+            L_set.insert({vectors.euclidean_distance(query, i), i});
         }
     }
 
@@ -116,7 +116,7 @@ FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int start, int quer
     // Add the deleted visited indeces to L_set
     for (size_t i = 0; i < vectors_size; i++) {
         if (visited[i]) {
-            L_set.insert({vectors.euclidean_distance_direct_cache(query, i), i});
+            L_set.insert({vectors.euclidean_distance(query, i), i});
         }
     }
 

@@ -47,7 +47,7 @@ Vectors::Vectors(int num_vectors, int queries_num)
     vectors = new float*[base_size + queries];
     filters = new float[base_size + queries]();
 
-    for (int i = 0; i < base_size; i++) {
+    for (u_int32_t i = 0; i < base_size; i++) {
         vectors[i] = new float[dimention];
         filters[i] = i % 2;
         filters_map[filters[i]].insert(i);
@@ -59,7 +59,7 @@ Vectors::Vectors(int num_vectors, int queries_num)
 
 // Destructor to free allocated memory
 Vectors::~Vectors() {
-    for (int i = 0; i < base_size + queries; i++)
+    for (u_int32_t i = 0; i < base_size + queries; i++)
         delete[] vectors[i];
     delete[] vectors;
     delete[] filters;
@@ -104,7 +104,7 @@ void Vectors::read_queries(const std::string& file_name, u_int32_t read_num) {
     if (!file.read(reinterpret_cast<char*>(&queries_num), sizeof(queries_num))) return;
     queries_num = std::min(queries_num, read_num);
 
-    int num_read_vectors = base_size;
+    u_int32_t num_read_vectors = base_size;
 
     while (num_read_vectors < base_size + queries_num && file) {
         // Determine the type of the query
