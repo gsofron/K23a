@@ -6,17 +6,17 @@
 #include "utils.hpp"
 
 // Load vectors from a binary file and initialize cache
-Vectors::Vectors(const std::string& file_name, int vectors_dimention, u_int32_t num_read_vectors, u_int32_t queries_num) 
+Vectors::Vectors(const std::string& file_name, int vectors_dimention, int num_read_vectors, int queries_num) 
     : base_size(0), dimention(vectors_dimention), queries(queries_num) {
     
     std::ifstream file(file_name, std::ios::binary);
     if (!file) throw std::runtime_error("Error opening file: " + file_name);
 
     // Read the number of vectors
-    u_int32_t max_vectors;
-    if (!file.read(reinterpret_cast<char*>(&max_vectors), sizeof(max_vectors))) return;
+    u_int32_t u_max_vectors;
+    if (!file.read(reinterpret_cast<char*>(&u_max_vectors), sizeof(u_max_vectors))) return;
     // Keep the smaller number so it is controllable the number of vectors that  will be read
-    max_vectors = std::min(max_vectors, num_read_vectors);
+    int max_vectors = std::min(static_cast<int>(u_max_vectors), num_read_vectors);
     
     vectors = new float*[max_vectors + queries];
     filters = new float[max_vectors + queries];
@@ -47,7 +47,7 @@ Vectors::Vectors(int num_vectors, int queries_num)
     vectors = new float*[base_size + queries];
     filters = new float[base_size + queries]();
 
-    for (u_int32_t i = 0; i < base_size; i++) {
+    for (int i = 0; i < base_size; i++) {
         vectors[i] = new float[dimention];
         filters[i] = i % 2;
         filters_map[filters[i]].insert(i);
@@ -59,7 +59,7 @@ Vectors::Vectors(int num_vectors, int queries_num)
 
 // Destructor to free allocated memory
 Vectors::~Vectors() {
-    for (u_int32_t i = 0; i < base_size + queries; i++)
+    for (int i = 0; i < base_size + queries; i++)
         delete[] vectors[i];
     delete[] vectors;
     delete[] filters;
@@ -95,16 +95,16 @@ float Vectors::euclidean_distance(int index1, int index2) {
 }
 
 // Load multiple query vectors from a file
-void Vectors::read_queries(const std::string& file_name, u_int32_t read_num) {
+void Vectors::read_queries(const std::string& file_name, int read_num) {
     std::ifstream file(file_name, std::ios::binary);
     if (!file) throw std::runtime_error("Error opening file: " + file_name);
 
     // Read the number of queries
-    u_int32_t queries_num;
-    if (!file.read(reinterpret_cast<char*>(&queries_num), sizeof(queries_num))) return;
-    queries_num = std::min(queries_num, read_num);
+    u_int32_t u_queries_num;
+    if (!file.read(reinterpret_cast<char*>(&u_queries_num), sizeof(u_queries_num))) return;
+    int queries_num = std::min(static_cast<int>(u_queries_num), read_num);
 
-    u_int32_t num_read_vectors = base_size;
+    int num_read_vectors = base_size;
 
     while (num_read_vectors < base_size + queries_num && file) {
         // Determine the type of the query
