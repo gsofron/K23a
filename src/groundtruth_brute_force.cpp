@@ -90,35 +90,54 @@ int main(int argc, char *argv[]) {
     Vectors vectors(argv[1], VEC_DIMENSION, data_vecs_num, query_vecs_num);
     vectors.read_queries(argv[2], query_vecs_num);
 
+    std::cout << "Reading queries..." << std::endl;
+
+    // Read contents of query file to determine which queries are valid
+    // Invalid queries have index -1
+    // False are unfiltered, true are filtered
+    std::pair<int, bool> index_of[query_vecs_num];
+    int valid_queries_count = 0;
+    for (int i = 0 ; i < query_vecs_num ; i++) {
+        std::vector<float> buff(104);
+        queries_file.read((char *)buff.data(), 104 * sizeof(float));
+        if (buff[0] == 0) index_of[i] = {valid_queries_count++, false};
+        else if (buff[0] == 1) index_of[i] = {valid_queries_count++, true};
+        else index_of[i] = {-1, false};
+    }
+    queries_file.close();
+
     // Create output file
     std::ofstream groundtruth_file(argv[3], std::ios::binary);
     if (!groundtruth_file) throw std::runtime_error("Error opening file: " + (std::string)argv[3]);
 
-    // Since Vectors class doesn't save queries that contain timestamp, save the number of valid queries
-    // and use it as an offset for euclidean_distance()
-    int count = 0;    
+    // Store all results to write them afterwards
+    std::vector<std::vector<int>> results(query_vecs_num);
 
-    // Read all vectors. Query vectors have dimension of 104
+    std::cout << "Computing KNNs..." << std::endl;
+    // Calculate K nearest neighbors for all vectors
+    #pragma omp parallel for
     for (int i = 0 ; i < query_vecs_num ; i++) {
-        // Read current query
-        std::vector<float> buff(104);
-        queries_file.read((char *)buff.data(), 104 * sizeof(float));
+        if (index_of[i].first == -1) continue;
 
         // Get K nearest neighbors according to query type. Ignore timestamp queries
         std::vector<int> knn;
-        if (buff[0] == 0) knn = get_true_knn_unfiltered(vectors, data_vecs_num, count);
-        else if (buff[0] == 1) knn = get_true_knn_filtered(vectors, data_vecs_num, count);
-        else continue;
+        if (index_of[i].second == false) knn = get_true_knn_unfiltered(vectors, data_vecs_num, index_of[i].first);
+        else knn = get_true_knn_filtered(vectors, data_vecs_num, index_of[i].first);
 
-        // Write the actual nearest neighbors
+        // Store current result
+        results[i] = knn;
+    }
+
+    std::cout << "Writing KNNs..." << std::endl;
+    // After all threads are done, write results in order
+    for (int i = 0; i < query_vecs_num; i++) {
+        auto& knn = results[i];
         for (int index : knn) {
             groundtruth_file.write(reinterpret_cast<const char*>(&index), sizeof(index));
         }
-        
-        count++;
     }
 
-    std::cout << "Groundtruth brute force finished. Counted a total of " << count << " valid queries" << std::endl;
+    std::cout << "Groundtruth brute force finished. Counted a total of " << valid_queries_count << " valid queries" << std::endl;
     queries_file.close();
     groundtruth_file.close();
     return 0;
