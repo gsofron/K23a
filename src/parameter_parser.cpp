@@ -200,7 +200,7 @@ void parse_filtered(int vec_dimension, int k, int argc, char *argv[], std::strin
     std::cout << "t = " << t << std::endl;
     std::cout << "index = " << index << std::endl;
     if (random_graph_flag) std::cout << "Using random graph for FilteredVamana initialization" << std::endl;
-    if (limit != std::numeric_limits<int>::max()) std::cout << "Using unfiltered query limit: " << limit << std::endl;
+    if (limit != std::numeric_limits<int>::max()) std::cout << "Using limit: " << limit << std::endl;
     std::cout << std::endl;
 }
 
@@ -398,6 +398,6 @@ void parse_stitched(int vec_dimension, int k, int argc, char *argv[], std::strin
     if (random_graph_flag) std::cout << "Using random graph for StitchedVamana initialization" << std::endl;
     if (random_medoid_flag) std::cout << "Using random medoid for FindMedoid initialization" << std::endl;
     if (random_subset_medoid_flag) std::cout << "Using a random subset of medoids for FindMedoid initialization" << std::endl;
-    if (limit != std::numeric_limits<int>::max()) std::cout << "Using unfiltered query limit: " << limit << std::endl;
+    if (limit != std::numeric_limits<int>::max()) std::cout << "Using limit: " << limit << std::endl;
     std::cout << std::endl;
 }

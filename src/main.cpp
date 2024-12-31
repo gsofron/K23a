@@ -47,10 +47,10 @@ int intersect(const std::vector<int>& vec1, const std::vector<int>& vec2) {
 }
 
 // Calculate recall of current filtered query
-float calculate_filtered_recall(float filter, std::unordered_map<float, int> *M, DirectedGraph *g, Vectors& vectors, int j, int base_vectors_num, int L, std::string groundtruth_file) {
+float calculate_filtered_recall(float filter, std::unordered_map<float, int> *M, DirectedGraph *g, Vectors& vectors, int j, int base_vectors_num, int L, std::string groundtruth_file, int limit) {
     std::vector<int> L_set;
     int start = M->at(filter);
-    L_set = FilteredGreedySearch(*g, vectors, start, j + base_vectors_num, K, L).first;
+    L_set = FilteredGreedySearch(*g, vectors, start, j + base_vectors_num, K, L, limit).first;
 
     auto groundtruth = vectors.query_solutions(groundtruth_file, j);
     std::sort(groundtruth.begin(), groundtruth.end());
@@ -123,6 +123,7 @@ int main(int argc, char *argv[]) {
     vectors.read_queries(query_file, query_vectors_num);
 
     // Start timer for build time
+    std::cout << "Building..." << std::endl;
     auto build_start = std::chrono::high_resolution_clock::now();
 
     DirectedGraph *g;
@@ -131,9 +132,9 @@ int main(int argc, char *argv[]) {
     if (!vamana_file.empty()) g = read_vamana_from_file(vamana_file);
     // Else, initialize graph g with FilteredVamana or StitchedVamana accordingly for each executable
     #ifdef FILTERED_VAMANA
-    else g = filtered_vamana(vectors, a, L, R, t, M, random_graph_flag);
+    else g = filtered_vamana(vectors, a, L, R, t, M, random_graph_flag, limit);
     #else
-    else g = stitched_vamana(vectors, a, L_small, R_small, R_stitched, random_graph_flag, random_medoid_flag, random_subset_medoid_flag);
+    else g = stitched_vamana(vectors, a, L_small, R_small, R_stitched, random_graph_flag, random_medoid_flag, random_subset_medoid_flag, limit);
     #endif
 
     // End timer for build time
@@ -143,6 +144,7 @@ int main(int argc, char *argv[]) {
     if (M == nullptr) M = find_medoid(vectors, t);
 
     // Start timer for total query time
+    std::cout << "Querying..." << std::endl;
     auto total_query_start = std::chrono::high_resolution_clock::now();
 
     // User wants to calculate total recall
@@ -152,13 +154,12 @@ int main(int argc, char *argv[]) {
         
         // Filtered Queries
         auto filtered_queries_start = std::chrono::high_resolution_clock::now();
-        #pragma omp parallel for num_threads(4) \
-        reduction(+: recall_sum, count, filtered_recall_sum, filtered_count)
+        #pragma omp parallel for reduction(+: recall_sum, count, filtered_recall_sum, filtered_count)
         for (int j = 0; j < query_vectors_num; j++) {
             float filter = vectors.filters[j + base_vectors_num];
             if (filter == -1 || M->find(filter) == M->end()) continue;
             
-            float current_recall = calculate_filtered_recall(filter, M, g, vectors, j, base_vectors_num, L, groundtruth_file);
+            float current_recall = calculate_filtered_recall(filter, M, g, vectors, j, base_vectors_num, L, groundtruth_file, limit);
             
             // These updates are part of the reduction
             count++;
@@ -171,8 +172,7 @@ int main(int argc, char *argv[]) {
 
         // Unfiltered Queries
         auto unfiltered_queries_start = std::chrono::high_resolution_clock::now();
-        #pragma omp parallel for num_threads(4) \
-        reduction(+: recall_sum, count, unfiltered_recall_sum, unfiltered_count)
+        #pragma omp parallel for reduction(+: recall_sum, count, unfiltered_recall_sum, unfiltered_count)
         for (int j = 0; j < query_vectors_num; j++) {
             float filter = vectors.filters[j + base_vectors_num];
             if (filter != -1) continue;
@@ -195,7 +195,7 @@ int main(int argc, char *argv[]) {
         if (filter != -1 && M->find(filter) == M->end()) std::cout << "This query's filter does not match with any filter of the base vectors" << std::endl;;
         
         float current_recall;
-        if (filter != -1) current_recall = calculate_filtered_recall(filter, M, g, vectors, index, base_vectors_num, L, groundtruth_file);
+        if (filter != -1) current_recall = calculate_filtered_recall(filter, M, g, vectors, index, base_vectors_num, L, groundtruth_file, limit);
         else current_recall = calculate_unfiltered_recall(M, g, vectors, index, base_vectors_num, L, groundtruth_file, limit);
         std::cout << "Current recall is: " << 100*current_recall << "%" << std::endl;
     }

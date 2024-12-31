@@ -90,7 +90,7 @@ int random_subset_medoid(Vectors& vectors, int *Pf, int n) {
     return random_medoid;
 }
 
-DirectedGraph *vamana(Vectors& P, int *Pf, int n, float a, int L, int R, bool random_medoid_flag, bool random_subset_medoid_flag) {
+DirectedGraph *vamana(Vectors& P, int *Pf, int n, float a, int L, int R, bool random_medoid_flag, bool random_subset_medoid_flag, int limit) {
     // Init the R-regular (counting out-degree only) graph
     DirectedGraph *G = random_graph(n, R);
     
@@ -112,7 +112,7 @@ DirectedGraph *vamana(Vectors& P, int *Pf, int n, float a, int L, int R, bool ra
     std::shuffle(sigma, sigma + n, rng);
     
     for (int i = 0; i < n; i++) {
-        auto [Lset, V] = GreedySearch(*G, P, Pf, n, s, sigma[i], 1, L);
+        auto [Lset, V] = GreedySearch(*G, P, Pf, n, s, sigma[i], 1, L, limit);
         robust_prune(G, P, Pf, sigma[i], V, a, R);
 
         const auto& N_out_sigma_i = G->get_neighbors(sigma[i]);
