@@ -8,9 +8,9 @@
 DirectedGraph create_graph(int num) {
     DirectedGraph graph(1000);  
 
-    for (int i = 0; i < num - 2; i++) {  
-        graph.insert(i, i + 1);  
+    for (int i = 0; i < num - 4; i++) {  
         graph.insert(i, i + 2);  
+        graph.insert(i, i + 4);  
     }
     return graph;
 }
