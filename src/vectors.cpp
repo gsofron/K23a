@@ -72,7 +72,7 @@ float Vectors::euclidean_distance(int index1, int index2) {
 
     __m256 sum_vec = _mm256_setzero_ps(); // Accumulator for the sum of squared differences
     int i;
-    for (i = 0; i <= 92; i += 8) {
+    for (i = 0; i <= dimention - 8; i += 8) {
         __m256 vec_a = _mm256_loadu_ps(a + i);      // Load 8 floats from vector a
         __m256 vec_b = _mm256_loadu_ps(b + i);      // Load 8 floats from vector b
         __m256 diff = _mm256_sub_ps(vec_a, vec_b);  // Compute a[i]-b[i]
@@ -86,7 +86,7 @@ float Vectors::euclidean_distance(int index1, int index2) {
     for (int j = 0; j < 8; j++)
         sum += sum_array[j];
     // Handle the remaining (possible) elements
-    for (; i < 100; i++) {
+    for (; i < dimention; i++) {
         float diff = a[i] - b[i];
         sum += diff * diff;
     }
