@@ -47,10 +47,10 @@ int intersect(const std::vector<int>& vec1, const std::vector<int>& vec2) {
 }
 
 // Calculate recall of current filtered query
-float calculate_filtered_recall(float filter, std::unordered_map<float, int> *M, DirectedGraph *g, Vectors& vectors, int j, int base_vectors_num, int L, std::string groundtruth_file, int limit) {
+float calculate_filtered_recall(float filter, std::unordered_map<float, int> *M, DirectedGraph *g, Vectors& vectors, int j, int base_vectors_num, int L, std::string groundtruth_file) {
     std::vector<int> L_set;
     int start = M->at(filter);
-    L_set = FilteredGreedySearch(*g, vectors, start, j + base_vectors_num, K, L, limit).first;
+    L_set = FilteredGreedySearch(*g, vectors, start, j + base_vectors_num, K, L, std::numeric_limits<int>::max()).first;
 
     auto groundtruth = vectors.query_solutions(groundtruth_file, j);
     std::sort(groundtruth.begin(), groundtruth.end());
@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
             float filter = vectors.filters[j + base_vectors_num];
             if (filter == -1 || M->find(filter) == M->end()) continue;
             
-            float current_recall = calculate_filtered_recall(filter, M, g, vectors, j, base_vectors_num, L, groundtruth_file, limit);
+            float current_recall = calculate_filtered_recall(filter, M, g, vectors, j, base_vectors_num, L, groundtruth_file);
             
             // These updates are part of the reduction
             count++;
@@ -195,7 +195,7 @@ int main(int argc, char *argv[]) {
         if (filter != -1 && M->find(filter) == M->end()) std::cout << "This query's filter does not match with any filter of the base vectors" << std::endl;;
         
         float current_recall;
-        if (filter != -1) current_recall = calculate_filtered_recall(filter, M, g, vectors, index, base_vectors_num, L, groundtruth_file, limit);
+        if (filter != -1) current_recall = calculate_filtered_recall(filter, M, g, vectors, index, base_vectors_num, L, groundtruth_file);
         else current_recall = calculate_unfiltered_recall(M, g, vectors, index, base_vectors_num, L, groundtruth_file, limit);
         std::cout << "Current recall is: " << 100*current_recall << "%" << std::endl;
     }
