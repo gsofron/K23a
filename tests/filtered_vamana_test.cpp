@@ -1,5 +1,6 @@
 #include "acutest.h"
 #include "filtered_vamana.hpp"
+#include <limits>
 
 // Used for testing
 #define NUM_OF_ENTRIES 700
@@ -13,7 +14,7 @@ void test_filtered_vamana(void) {
     Vectors vectors = Vectors(NUM_OF_ENTRIES, 0);
 
     // Create the Filtered Vamana graph
-    DirectedGraph *g = filtered_vamana(vectors, A, L, R, T, nullptr, false);
+    DirectedGraph *g = filtered_vamana(vectors, A, L, R, T, nullptr, false, std::numeric_limits<int>::max());
 
     // Test the out-degree of each vertex. It should be <= R
     int n = vectors.size();

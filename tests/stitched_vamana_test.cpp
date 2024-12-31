@@ -1,6 +1,7 @@
 #include "acutest.h"
 #include "vamana.hpp"
 #include "stitched_vamana.hpp"
+#include <limits>
 
 // Used for testing
 #define NUM_OF_ENTRIES 1000
@@ -15,7 +16,7 @@ void test_stitched_vamana(void) {
     Vectors vectors = Vectors(NUM_OF_ENTRIES, 0);
 
     // Create the Vamana graph
-    DirectedGraph *g = stitched_vamana(vectors, A, L, R_SMALL, R_STITCHED, false, false, false);
+    DirectedGraph *g = stitched_vamana(vectors, A, L, R_SMALL, R_STITCHED, false, false, false, std::numeric_limits<int>::max());
 
     // Test the out-degree of each vertex. It should be <= R
     int n = vectors.size();

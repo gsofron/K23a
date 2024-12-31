@@ -1,6 +1,7 @@
 #include "acutest.h"         
 #include <vector>
 #include <iostream> 
+#include <limits>
 #include "filtered_greedy_search.hpp"      
 
 // Creates a sample directed graph with sequential and near-sequential edges
@@ -27,7 +28,7 @@ void test_filtered_greedy_search(void) {
     unsigned long L = 10;        // Maximum allowed search steps
 
     // Execute GreedySearch and store the result
-    auto result = FilteredGreedySearch(graph, vectors, 0, 1000, k, L);
+    auto result = FilteredGreedySearch(graph, vectors, 0, 1000, k, L, std::numeric_limits<int>::max());
 
     // Check results' validity
     TEST_CHECK(result.first[0] == 666);
