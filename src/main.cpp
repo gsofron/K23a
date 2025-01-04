@@ -31,8 +31,8 @@
 // time ./stitched -b dummy/dummy-data.bin -q dummy/dummy-queries.bin -g dummy/dummy-groundtruth.bin -v vamana.bin -s new.bin -n 10000 -m 5012 -a 1.1 -L 150 -l 100 -r 32 -R 64 -t 50 -i -1
 
 // Helper function to return elapsed time in seconds
-float elapsed_time(std::chrono::time_point<std::chrono::high_resolution_clock> start) {
-    auto end = std::chrono::high_resolution_clock::now();
+float elapsed_time(std::chrono::time_point<std::chrono::steady_clock> start) {
+    auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double, std::milli> elapsed_time_ms = end - start;
     return elapsed_time_ms.count() / 1000;
 }
@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
 
     // Start timer for build time
     std::cout << "Building..." << std::endl;
-    auto build_start = std::chrono::high_resolution_clock::now();
+    auto build_start = std::chrono::steady_clock::now();
 
     DirectedGraph *g;
     std::unordered_map<float, int> *M = nullptr;
@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
 
     // Start timer for total query time
     std::cout << "Querying..." << std::endl;
-    auto total_query_start = std::chrono::high_resolution_clock::now();
+    auto total_query_start = std::chrono::steady_clock::now();
 
     // User wants to calculate total recall
     if (index == -1) {
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
         float recall_sum = 0.0, filtered_recall_sum = 0.0, unfiltered_recall_sum = 0.0;
         
         // Filtered Queries
-        auto filtered_queries_start = std::chrono::high_resolution_clock::now();
+        auto filtered_queries_start = std::chrono::steady_clock::now();
         #pragma omp parallel for reduction(+: recall_sum, count, filtered_recall_sum, filtered_count)
         for (int j = 0; j < query_vectors_num; j++) {
             float filter = vectors.filters[j + base_vectors_num];
@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Filtered queries recall: " << 100*filtered_recall_sum/filtered_count << "%" << std::endl << std::endl;
 
         // Unfiltered Queries
-        auto unfiltered_queries_start = std::chrono::high_resolution_clock::now();
+        auto unfiltered_queries_start = std::chrono::steady_clock::now();
         #pragma omp parallel for reduction(+: recall_sum, count, unfiltered_recall_sum, unfiltered_count)
         for (int j = 0; j < query_vectors_num; j++) {
             float filter = vectors.filters[j + base_vectors_num];
