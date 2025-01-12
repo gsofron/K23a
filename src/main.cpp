@@ -127,21 +127,18 @@ int main(int argc, char *argv[]) {
     auto build_start = std::chrono::steady_clock::now();
 
     DirectedGraph *g;
-    std::unordered_map<float, int> *M = nullptr;
+    std::unordered_map<float, int> *M = find_medoid(vectors, t);
     // If user gave vamana file, use it to initialize the graph
     if (!vamana_file.empty()) g = read_vamana_from_file(vamana_file);
     // Else, initialize graph g with FilteredVamana or StitchedVamana accordingly for each executable
     #ifdef FILTERED_VAMANA
-    else g = filtered_vamana(vectors, a, L, R, t, M, random_graph_flag, limit);
+    else g = filtered_vamana(vectors, a, L, R, M, random_graph_flag, limit);
     #else
     else g = stitched_vamana(vectors, a, L_small, R_small, R_stitched, random_graph_flag, random_medoid_flag, random_subset_medoid_flag, limit);
     #endif
 
     // End timer for build time
     std::cout << "Build time: " << elapsed_time(build_start) << " seconds" << std::endl << std::endl;
-
-    // Initialize medoid map if it wasn't aready initialized
-    if (M == nullptr) M = find_medoid(vectors, t);
 
     // Start timer for total query time
     std::cout << "Querying..." << std::endl;

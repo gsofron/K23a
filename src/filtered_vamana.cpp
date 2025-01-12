@@ -7,15 +7,15 @@
 #include "findmedoid.hpp"
 #include "vamana.hpp"
 
-DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold, std::unordered_map<float, int> *M, bool random_graph_flag, int limit) {
+DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, std::unordered_map<float, int> *M, bool random_graph_flag, int limit) {
     int n = P.size();
     // Initialize G to an empty or random graph
     DirectedGraph *G; 
     if (random_graph_flag) G = random_graph(n, R);
     else G = new DirectedGraph(n);
 
-    // Start node (index) of every filter
-    M = find_medoid(P, threshold);
+    // Start node (index) of every filter M is already initialized in main() function
+
     // Create the random permutation sigma (σ)
     int *sigma = new int[n];
     for (int i = 0; i < n; i++)

@@ -1,5 +1,6 @@
 #include "acutest.h"
 #include "filtered_vamana.hpp"
+#include "findmedoid.hpp"
 #include <limits>
 
 // Used for testing
@@ -13,14 +14,18 @@ void test_filtered_vamana(void) {
     // Create random vectors to use as a dataset
     Vectors vectors = Vectors(NUM_OF_ENTRIES, 0);
 
+    auto *M = find_medoid(vectors, T);
+
     // Create the Filtered Vamana graph
-    DirectedGraph *g = filtered_vamana(vectors, A, L, R, T, nullptr, false, std::numeric_limits<int>::max());
+    DirectedGraph *g = filtered_vamana(vectors, A, L, R, M, false, std::numeric_limits<int>::max());
 
     // Test the out-degree of each vertex. It should be <= R
     int n = vectors.size();
     for (int i = 0; i < n; i++) {
         TEST_CHECK(g->get_neighbors(i).size() <= R);
     }
+
+    delete M;
 
     delete g;
 }
