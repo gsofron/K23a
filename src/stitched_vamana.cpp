@@ -54,5 +54,6 @@ DirectedGraph *stitched_vamana(Vectors& P, float a, int L_small, int R_small, in
         filtered_robust_prune(G, P, i, ordered_neighbors_i, a, R_stitched);
     }
 
+    delete[] filters;
     return G;
 }
