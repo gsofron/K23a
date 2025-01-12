@@ -1,17 +1,17 @@
-## Κ23α: Ανάπτυξη Λογισμικού για Πληροφοριακά Συστήματα
+## Κ23α: Software Devolopment for Information Systems
 
-Αναλυτική περιγραφή της υλοποίησής μας βρίσκεται στο αρχείο **REPORT-v2.pdf**
+The detailed description of our implementation can be found in the file **REPORT.pdf**.
 
-### Μέλη Ομάδας
+### Team Members
 
-* Μιχαήλ-Ραφαήλ Κωσταγιάννης<br>
-ΑΜ: 1115202100078<br>
+* Michael-Rafael Kostagiannis<br>
+S.N.: 1115202100078<br>
 email: sdi2100078@di.uoa.gr
 
-* Γιώργος Σωφρονάς<br>
-ΑΜ: 1115202100180<br>
+* Giorgos Sofronas<br>
+S.N.: 1115202100180<br>
 email: sdi2100180@di.uoa.gr
 
-* Στυλιανή Τζιούμα<br>
-ΑΜ: 1115202100184<br>
+* Styliani Tziouma<br>
+S.N.: 1115202100184<br>
 email: sdi2100184@di.uoa.gr
