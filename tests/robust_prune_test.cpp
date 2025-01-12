@@ -70,16 +70,16 @@ void test_robust_prune_empty_set(void) {
         // Find the actual nearest point
         std::set<std::pair<float, int>> s;
         for (int j = 0 ; j < NUM_OF_VECS ; j++) {
-            s.insert({vectors.euclidean_distance_cached(i, j), j});
+            s.insert({vectors.euclidean_distance(i, j), j});
         }
 
-        // Since s is sorted with respect to i, first point of s is 'i' with euclidean_distance_cached(i,i) = 0.0, 
+        // Since s is sorted with respect to i, first point of s is 'i' with euclidean_distance(i,i) = 0.0, 
         // so the actual nearest point is the one found in the second position
         int nearest = (++s.begin())->second;
 
         // Check if they are the same. If not, they should at least have the same distance
-        float dist1 = vectors.euclidean_distance_cached(i, neighbor);
-        float dist2 = vectors.euclidean_distance_cached(i, nearest);
+        float dist1 = vectors.euclidean_distance(i, neighbor);
+        float dist2 = vectors.euclidean_distance(i, nearest);
 
         TEST_CHECK(neighbor == nearest || dist1 == dist2);
     }
@@ -109,7 +109,7 @@ void test_robust_prune_full_set(void) {
         // Get the set containing all vertices
         std::set<std::pair<float, int>> s;
         for (int j = 0 ; j < NUM_OF_VECS ; j++) {
-            s.insert({vectors.euclidean_distance_cached(i, j), j});
+            s.insert({vectors.euclidean_distance(i, j), j});
         }
         // Since s is passed by reference and is modified, create copy s2
         std::set<std::pair<float, int>> s2 = s;
@@ -123,13 +123,13 @@ void test_robust_prune_full_set(void) {
         TEST_CHECK(neighbors.size() == 1);
         int neighbor = *neighbors.begin();
         
-        // Since s is sorted with respect to i, first point of s is 'i' with euclidean_distance_cached(i,i) = 0.0, 
+        // Since s is sorted with respect to i, first point of s is 'i' with euclidean_distance(i,i) = 0.0, 
         // so the actual nearest point is the one found in the second position
         int nearest = (++s.begin())->second;
 
         // Check if they are the same. If not, they should at least have the same distance
-        float dist1 = vectors.euclidean_distance_cached(i, neighbor);
-        float dist2 = vectors.euclidean_distance_cached(i, nearest);
+        float dist1 = vectors.euclidean_distance(i, neighbor);
+        float dist2 = vectors.euclidean_distance(i, nearest);
 
         TEST_CHECK(neighbor == nearest || dist1 == dist2);
     }

@@ -5,14 +5,16 @@
 #include "filtered_robust_prune.hpp"
 #include "filtered_vamana.hpp"
 #include "findmedoid.hpp"
+#include "vamana.hpp"
 
-DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold) {
+DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, std::unordered_map<float, int> *M, bool random_graph_flag, int limit) {
     int n = P.size();
-    // Initialize G to an empty graph
-    DirectedGraph *G = new DirectedGraph(n);
+    // Initialize G to an empty or random graph
+    DirectedGraph *G; 
+    if (random_graph_flag) G = random_graph(n, R);
+    else G = new DirectedGraph(n);
 
-    // Start node (index) of every filter
-    auto *st = find_medoid(P, threshold);
+    // Start node (index) of every filter M is already initialized in main() function
 
     // Create the random permutation sigma (σ)
     int *sigma = new int[n];
@@ -26,9 +28,9 @@ DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold)
 
     for (int i = 0; i < n; i++) {
         float Fx = P.filters[sigma[i]]; // Filter of current index
-        int s = st->at(Fx); // Medoid point of this filter
+        int s = M->at(Fx); // Medoid point of this filter
 
-        auto V_Fx = FilteredGreedySearch(*G, P, s, sigma[i], 0, L).second;
+        auto V_Fx = FilteredGreedySearch(*G, P, s, sigma[i], 0, L, limit).second;
         filtered_robust_prune(G, P, sigma[i], V_Fx, a, R);
 
         const auto& N_out_sigma_i = G->get_neighbors(sigma[i]);
@@ -39,7 +41,7 @@ DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold)
             if ((int)N_out_j.size() > R) {
                 std::set<std::pair<float, int>> new_N_out_j;
                 for (auto v : N_out_j)
-                    new_N_out_j.insert({P.euclidean_distance_cached(j, v), v});
+                    new_N_out_j.insert({P.euclidean_distance(j, v), v});
 
                 filtered_robust_prune(G, P, j, new_N_out_j, a, R);
             }
@@ -47,7 +49,6 @@ DirectedGraph *filtered_vamana(Vectors& P, float a, int L, int R, int threshold)
     }
 
     delete[] sigma;
-    delete st;
 
     return G;
 }

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <algorithm>
+#include <immintrin.h>
 
 #include "vectors.hpp"
 #include "utils.hpp"
@@ -12,13 +13,12 @@ Vectors::Vectors(const std::string& file_name, int vectors_dimention, int num_re
     if (!file) throw std::runtime_error("Error opening file: " + file_name);
 
     // Read the number of vectors
-    int max_vectors;
-    if (!file.read(reinterpret_cast<char*>(&max_vectors), sizeof(int))) return;
+    u_int32_t u_max_vectors;
+    if (!file.read(reinterpret_cast<char*>(&u_max_vectors), sizeof(u_max_vectors))) return;
     // Keep the smaller number so it is controllable the number of vectors that  will be read
-    max_vectors = std::min(max_vectors, num_read_vectors);
+    int max_vectors = std::min(static_cast<int>(u_max_vectors), num_read_vectors);
     
     vectors = new float*[max_vectors + queries];
-    dist_matrix = new float*[max_vectors + queries];
     filters = new float[max_vectors + queries];
 
     while (base_size < max_vectors && file) {
@@ -34,15 +34,7 @@ Vectors::Vectors(const std::string& file_name, int vectors_dimention, int num_re
             throw std::runtime_error("Error reading vector data from file");
         }
 
-        // Initialise the euclidean distances of all the vectors
-        dist_matrix[base_size] = new float[max_vectors]();
         base_size++;
-    }
-
-    for (int i = 0; i < base_size; i++) {
-        for (int j = i + 1; j < base_size; j++) {
-            euclidean_distance(i, j);
-        }
     }
 
     file.close();
@@ -53,52 +45,53 @@ Vectors::Vectors(int num_vectors, int queries_num)
     : base_size(num_vectors), dimention(3), queries(queries_num) {
     
     vectors = new float*[base_size + queries];
-    dist_matrix = new float*[base_size + queries];
     filters = new float[base_size + queries]();
 
     for (int i = 0; i < base_size; i++) {
         vectors[i] = new float[dimention];
-        dist_matrix[i] = new float[base_size]();
         filters[i] = i % 2;
         filters_map[filters[i]].insert(i);
         for (int j = 0; j < dimention; j++) {
             vectors[i][j] = static_cast<float>(i * 3 + (j + 1)); 
         }
     }
-
-    for (int i = 0; i < base_size; i++) {
-        for (int j = i + 1; j < base_size; j++) {
-            euclidean_distance(i, j);
-        }
-    }
 }
 
 // Destructor to free allocated memory
 Vectors::~Vectors() {
-    for (int i = 0; i < base_size + queries; ++i) {
+    for (int i = 0; i < base_size + queries; i++)
         delete[] vectors[i];
-        delete[] dist_matrix[i];
-    }
     delete[] vectors;
-    delete[] dist_matrix;
     delete[] filters;
 }
 
-// Calculate Euclidean distance and update cache
-float Vectors::euclidean_distance(int index1, int index2) const {
-    float sum = 0.0, diff;
-    auto& a = vectors[index1];
-    auto& b = vectors[index2];
+// Calculate Euclidean distance between two vectors
+float Vectors::euclidean_distance(int index1, int index2) {
+    const float *a = vectors[index1];
+    const float *b = vectors[index2];
 
-    for (auto i = 0; i < dimention; i++) {
-        diff = static_cast<float>(a[i]) - static_cast<float>(b[i]);
+    __m256 sum_vec = _mm256_setzero_ps(); // Accumulator for the sum of squared differences
+    int i;
+    for (i = 0; i <= dimention - 8; i += 8) {
+        __m256 vec_a = _mm256_loadu_ps(a + i);      // Load 8 floats from vector a
+        __m256 vec_b = _mm256_loadu_ps(b + i);      // Load 8 floats from vector b
+        __m256 diff = _mm256_sub_ps(vec_a, vec_b);  // Compute a[i]-b[i]
+        __m256 sq_diff = _mm256_mul_ps(diff, diff); // Square the differences
+        sum_vec = _mm256_add_ps(sum_vec, sq_diff);
+    }
+    // Sum the SIMD register into a single sum variable
+    float sum_array[8];
+    _mm256_storeu_ps(sum_array, sum_vec);
+    float sum = 0.0;
+    for (int j = 0; j < 8; j++)
+        sum += sum_array[j];
+    // Handle the remaining (possible) elements
+    for (; i < dimention; i++) {
+        float diff = a[i] - b[i];
         sum += diff * diff;
     }
 
-    if (index1 >= base_size || index2 >= base_size) return sum;
-    dist_matrix[index1][index2] = dist_matrix[index2][index1] = sum;
-
-    return dist_matrix[index1][index2];
+    return sum;
 }
 
 // Load multiple query vectors from a file
@@ -107,9 +100,9 @@ void Vectors::read_queries(const std::string& file_name, int read_num) {
     if (!file) throw std::runtime_error("Error opening file: " + file_name);
 
     // Read the number of queries
-    int queries_num;
-    if (!file.read(reinterpret_cast<char*>(&queries_num), sizeof(int))) return;
-    queries_num = std::min(queries_num, read_num);
+    u_int32_t u_queries_num;
+    if (!file.read(reinterpret_cast<char*>(&u_queries_num), sizeof(u_queries_num))) return;
+    int queries_num = std::min(static_cast<int>(u_queries_num), read_num);
 
     int num_read_vectors = base_size;
 
@@ -129,22 +122,10 @@ void Vectors::read_queries(const std::string& file_name, int read_num) {
 
         // Read the queries' values
         vectors[num_read_vectors] = new float[dimention];
-        dist_matrix[num_read_vectors] = new float[base_size]();
         if (!file.read(reinterpret_cast<char*>(vectors[num_read_vectors]), dimention * sizeof(float))) {
             throw std::runtime_error("Error reading vector data from file");
         }
 
-        if (!type) { // Initialise euclidean distance from query to every other base vector 
-            for (int i = 0 ; i < base_size ; i++) {
-                dist_matrix[num_read_vectors][i] = euclidean_distance(num_read_vectors, i);
-            }
-        } else { // Initialise the euclidean distance from the query to every other vector that has the same filter
-            for (int i = 0 ; i < base_size ; i++) {
-                if (filters[num_read_vectors] == filters[i]) {
-                    dist_matrix[num_read_vectors][i] = euclidean_distance(num_read_vectors, i);
-                }
-            }
-        }
         num_read_vectors++;
     }
     file.close();
@@ -176,21 +157,8 @@ bool Vectors::read_query(const std::string& file_name, int index) {
 
     // Read the queries' values
     vectors[base_size] = new float[dimention];
-    dist_matrix[base_size] = new float[base_size]();
     if (!file.read(reinterpret_cast<char*>(vectors[base_size]), dimention * sizeof(float))) {
         throw std::runtime_error("Error reading vector data from file");
-    }
-
-    if (!type) { // Initialise euclidean distance from query to every other base vector 
-        for (int i = 0 ; i < base_size ; i++) {
-            dist_matrix[base_size][i] = euclidean_distance(base_size, i);
-        }
-    } else { // Initialise the euclidean distance from the query to every other vector that has the same filter
-        for (int i = 0 ; i < base_size ; i++) {
-            if (filters[base_size] == filters[i]) {
-                dist_matrix[base_size][i] = euclidean_distance(base_size, i);
-            }
-        }
     }
     
     file.close();
@@ -219,9 +187,4 @@ std::vector<int> Vectors::query_solutions(const std::string& file_name, int quer
 void Vectors::add_query(float *values) {
     vectors[base_size] = new float[dimention];
     std::memcpy(vectors[base_size], values, dimention * sizeof(float));
-
-    dist_matrix[base_size] = new float[base_size];
-    for (int i = 0 ; i < base_size ; i++) {
-        dist_matrix[base_size][i] = euclidean_distance(base_size, i);
-    }
 }

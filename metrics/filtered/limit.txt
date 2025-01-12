@@ -1,0 +1,38 @@
+Execution #1:
+	Build Time: 4.02916 seconds
+	Filtered Queries Time: 0.978779 seconds
+	Filtered Queries Recall: 99.7138 %
+	Unfiltered Queries Time: 4.09496 seconds
+	Unfiltered Queries Recall: 94.0819 %
+	Total Recall: 96.886 %
+	Total Query Time: 5.07381 seconds
+	File size: 478168 bytes
+
+Execution #2:
+	Build Time: 4.04549 seconds
+	Filtered Queries Time: 0.636734 seconds
+	Filtered Queries Recall: 99.7226 %
+	Unfiltered Queries Time: 4.0969 seconds
+	Unfiltered Queries Recall: 94.1339 %
+	Total Recall: 96.9165 %
+	Total Query Time: 4.73373 seconds
+	File size: 478104 bytes
+
+Execution #3:
+	Build Time: 4.02535 seconds
+	Filtered Queries Time: 1.02736 seconds
+	Filtered Queries Recall: 99.7186 %
+	Unfiltered Queries Time: 4.11034 seconds
+	Unfiltered Queries Recall: 94.1125 %
+	Total Recall: 96.9038 %
+	Total Query Time: 5.13775 seconds
+	File size: 478012 bytes
+
+Average Build Time: 4.03333 seconds
+Average Filtered Queries Time: .88095 seconds
+Average Filtered Queries Recall: 99.71833 %
+Average Unfiltered Queries Time: 4.10073 seconds
+Average Unfiltered Queries Recall: 94.10943 %
+Average Recall: 96.90210 %
+Average Query Time: 4.98176 seconds
+Average File size: 478094.66666 bytes

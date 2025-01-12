@@ -4,4 +4,4 @@
 #include "vectors.hpp"        
 #include "directed_graph.hpp" 
 
-std::pair<std::vector<int>, std::set<std::pair<float, int>>> GreedySearch(DirectedGraph& graph, Vectors& vectors, int *Pf, int n, int start, int query, int k, int L); 
+std::pair<std::vector<int>, std::set<std::pair<float, int>>> GreedySearch(DirectedGraph& graph, Vectors& vectors, int *Pf, int n, int start, int query, int k, int L, int limit); 

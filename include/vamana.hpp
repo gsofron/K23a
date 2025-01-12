@@ -7,10 +7,10 @@
 DirectedGraph *random_graph(int num_of_vertices, int R);
 
 // Returns the medoid vertex (vector index) of Pf
-int medoid(const Vectors& vectors, int *Pf, int n);
+int medoid(Vectors& vectors, int *Pf, int n);
 
 // Vamana Indexing Algorithm implementation using Pf as the database
-DirectedGraph *vamana(Vectors& P, int *Pf, int n, float a, int L, int R);
+DirectedGraph *vamana(Vectors& P, int *Pf, int n, float a, int L, int R, bool random_medoid_flag, bool random_subset_medoid_flag, int limit);
 
 // Writes (stores) a vamana graph into a (binary) file
 void write_vamana_to_file(DirectedGraph& g, const std::string& file_name);

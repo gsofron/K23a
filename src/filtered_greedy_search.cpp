@@ -2,10 +2,10 @@
 #include <vector>
 #include <algorithm> 
 #include "utils.hpp"
-#include "greedy_search.hpp"
+#include "filtered_greedy_search.hpp"
 
 std::pair<std::vector<int>, std::set<std::pair<float, int>>> 
-FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int start, int query, int k, int L) {
+FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int start, int query, int k, int L, int limit) {
     size_t vectors_size = vectors.size();
 
     // Initialize result set and visited marker array
@@ -15,11 +15,11 @@ FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int start, int quer
 
     // Insert to L_set the start node if it has the same filter with the query
     if (vectors.same_filter(query, start)) {
-        L_set.insert({vectors.euclidean_distance_cached(query, start), start});
+        L_set.insert({vectors.euclidean_distance(query, start), start});
     }
 
     // Main search loop
-    while (true) {
+    while (--limit) {
         // Find first unvisited node in L_set
         auto p_star = std::find_if(L_set.begin(), L_set.end(), [&](const auto& pair) {
             return !visited[pair.second];
@@ -33,8 +33,8 @@ FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int start, int quer
         // Insert neighbors with distances
         const auto& neighbors = graph.get_neighbors(p_star->second);
         for (auto neighbor : neighbors) {
-            if (vectors.same_filter(query, neighbor) && !visited[neighbor]) {
-                L_set.insert({vectors.euclidean_distance_cached(query, neighbor), neighbor});
+            if (!visited[neighbor]) {
+                L_set.insert({vectors.euclidean_distance(query, neighbor), neighbor});
             }
         }
 
@@ -56,7 +56,7 @@ FilteredGreedySearch(DirectedGraph& graph, Vectors& vectors, int start, int quer
     // Add the deleted visited indeces to L_set
     for (size_t i = 0; i < vectors_size; i++) {
         if (visited[i]) {
-            L_set.insert({vectors.euclidean_distance_cached(query, i), i});
+            L_set.insert({vectors.euclidean_distance(query, i), i});
         }
     }
 
